@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import { Canvas } from '@react-three/fiber';
 import { RubiksContext } from './components/RubiksContext';
 import { Box, ThreeTestingComponent } from './components/three_testing_component/ThreeTestingComponent';
+import { Vector3 } from 'three';
 
 const rubiksCubeBoxes: JSX.Element[] = [];
     
@@ -25,6 +26,9 @@ for (let x=-1; x<2; x++) {
 }
 
 function App() {
+
+  const [clickedPosition, setClickedPosition] = useState(new Vector3(0, 0, 0));
+    
   return <>
     <div
       style={{
@@ -39,7 +43,9 @@ function App() {
           linear
       >
         <RubiksContext.Provider value={{
-          rubiksCubeBlocks: rubiksCubeBoxes
+          rubiksCubeBlocks: rubiksCubeBoxes,
+          clickedPosition: clickedPosition,
+          setClickedPosition: (value: Vector3) => setClickedPosition(value)
         }}>  
           <ThreeTestingComponent/>
         </RubiksContext.Provider>
