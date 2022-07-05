@@ -3,9 +3,6 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { Box, ThreeTestingComponent } from './components/three_testing_component/ThreeTestingComponent';
-import { Canvas } from '@react-three/fiber';
-import { RubiksContext } from './components/RubiksContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

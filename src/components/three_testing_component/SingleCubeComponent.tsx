@@ -1,7 +1,11 @@
 // import { Canvas, useFrame } from "@react-three/fiber";
 // import { useEffect, useRef, useState } from "react";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import * as THREE from "three";
+import { Vector3 } from "three";
+import { RubiksContext } from "../RubiksContext";
+
+
 
 function Plane(props: {
   scale: number;
@@ -35,26 +39,30 @@ interface SingleCubeComponentProps {
     right: string;
     front: string;
     back: string;
-  };
+  },
+  position: THREE.Vector3
 }
 
 export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   color,
+  position
 }) => {
+
+
   const facePositions: THREE.Vector3[] = [
     //from front view
     //top plane
-    new THREE.Vector3(0, 0.5, 0),
+    new THREE.Vector3(0, 0.5, 0).add(position),
     //bottom plane
-    new THREE.Vector3(0, -0.5, 0),
+    new THREE.Vector3(0, -0.5, 0).add(position),
     //left plane
-    new THREE.Vector3(-0.5, 0, 0),
+    new THREE.Vector3(-0.5, 0, 0).add(position),
     //right plane
-    new THREE.Vector3(0.5, 0, 0),
+    new THREE.Vector3(0.5, 0, 0).add(position),
     //front plane
-    new THREE.Vector3(0, 0, 0.5),
+    new THREE.Vector3(0, 0, 0.5).add(position),
     //back plane
-    new THREE.Vector3(0, 0, -0.5),
+    new THREE.Vector3(0, 0, -0.5).add(position),
   ];
   const faceRotations: THREE.Euler[] = [
     //from front view
@@ -86,7 +94,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
     new THREE.Color(color.back),
   ];
 
-  const cube = [];
+  const cube: JSX.Element[] = [];
   for (let i = 0; i < 6; i++) {
     // cube.push(<Plane position={[1, 1, 1]} rotation={[0, 0, 0]} color="red" />);
     cube.push(
@@ -99,5 +107,26 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
       />
     );
   }
-  return <>{cube}</>;
+
+
+  const mesh = useRef<THREE.Mesh>(null!);
+  return <>
+    <RubiksContext.Consumer> 
+      {
+        ({setClickedPosition, clickedPosition, setCubeRefs, cubeRefs}) => {
+          setCubeRefs!(position, mesh);
+
+          return <mesh
+            ref={mesh}
+            onClick={(e) => {
+              e.stopPropagation();
+              setClickedPosition!(position);
+            }}
+          >
+            {cube}
+          </mesh>
+        }
+      }
+    </RubiksContext.Consumer>
+  </>;
 };

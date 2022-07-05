@@ -77,28 +77,10 @@ function rotateRubiks(rubiksCubeBoxes: JSX.Element[], positionIndex: number, pos
 
 }
 
-export const ThreeTestingComponent = () => {
-
-    const { size, viewport } = useThree();
-    const aspect = size.width / viewport.width;
-
-    const [spring, set] = useSpring(() => ({ scale: [1, 1, 1], position: [0, 0, 0], rotation: [0, 0, 0]}));
-    const gestures = useGesture({
-        onDrag: ({offset: [x, y]}) => {
-
-            const [currentY, currentX]  = spring.rotation.get();
-            console.log("x: " + currentX);
-            console.log("y: " + currentY);
-    
-            set({ rotation: [currentY / aspect + y / aspect, currentX / aspect + x / aspect, 0] });
-        }
-    });
-    const draggingProps: any = {...gestures()};
-    const springProps: any = {...spring};
-
+export const RubikscubeComponent = () => {
 
     return <>
-        <a.group {...springProps} {...draggingProps}>
+        <group>
             {
                 <RubiksContext.Consumer>
                     {
@@ -108,6 +90,6 @@ export const ThreeTestingComponent = () => {
                     }
                 </RubiksContext.Consumer>
             }
-        </a.group>
+        </group>
     </>;
 }
