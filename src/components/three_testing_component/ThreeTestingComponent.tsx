@@ -1,91 +1,104 @@
-import { Canvas, useFrame } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "react"
+import { useSpring, a } from "@react-spring/three";
+import { Canvas, useFrame, useThree, Vector3 } from "@react-three/fiber";
+import { useDrag, useGesture } from "@use-gesture/react";
+import React, { DragEvent, DragEventHandler, useEffect, useRef, useState } from "react"
+import THREE, { Mesh, Object3D, Vector3 as THREEVector3, ZeroCurvatureEnding } from "three";
+import { RubiksContext } from "../RubiksContext";
 
-const Box = (props: JSX.IntrinsicElements["mesh"]) => {
+const meshRefs: Map<Vector3, React.MutableRefObject<THREE.Mesh>> = new Map();
+
+export const Box = (props: JSX.IntrinsicElements["mesh"]) => {
 
     // This reference will give us direct access to the mesh
     const mesh = useRef<THREE.Mesh>(null!);
-    // Set up state for the hovered and active state
-    const [hovered, setHover] = useState(false)
-    const [active, setActive] = useState(false)
-    // Subscribe this component to the render-loop, rotate the mesh every frame
-    /*
-    useFrame((state, delta) => {
-        mesh.current.rotation.x += 0.01;
-        mesh.current.rotation.y += 0.01;
-        mesh.current.rotation.z += 0.01;
-    });
-    */
+    meshRefs.set(props.position!, mesh);
     // Return view, these are regular three.js elements expressed in JSX
     return (
         <mesh
-        {...props}
-        ref={mesh}
-        scale={active ? 1.5 : 1}
-        onClick={(event) => setActive(!active)}
-        onPointerOver={(event) => setHover(true)}
-        onPointerOut={(event) => setHover(false)}>
-            <boxGeometry args={[0.8, 0.8, 0.8]} />
-            <meshStandardMaterial color={hovered ? 'hotpink' : 'orange'} />
+            {...props}
+            ref={mesh}
+            onClick={(e) => {
+                e.stopPropagation();
+                console.log(props.position);
+            }}
+        >
+            <boxGeometry args={[0.8, 0.8, 0.8]}/>
+            <meshBasicMaterial color={"black"}/>
         </mesh>
     );
 }
 
 
-const dragStart = (e: DragEvent): void => {
-    console.log("dragging start");
-    console.log(e.x);
-    console.log(e.y);
+function rotateAboutPoint(obj: any, point: THREEVector3, axis: THREEVector3, theta: number, pointIsWorld: boolean){
+    pointIsWorld = (pointIsWorld === undefined)? false : pointIsWorld;
+
+    if(pointIsWorld){
+        obj.parent.localToWorld(obj.position); // compensate for world coordinate
+    }
+
+    obj.position.sub(point); // remove the offset
+    obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
+    obj.position.add(point); // re-add the offset
+
+    if(pointIsWorld){
+        obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
+    }
+
+    obj.rotateOnAxis(axis, theta); // rotate the OBJECT
 }
-const dragEnd = (e: DragEvent): void => {
+
+function rotateRubiks(rubiksCubeBoxes: JSX.Element[], positionIndex: number, position: number) {
+
+    // testing rotation animation:
+    const rubixGroup: JSX.Element[] = [];
+    rubiksCubeBoxes.forEach((box) => {
+        console.log(box.props.position);
+        if (box.props.position[positionIndex] === position) {
+            rubixGroup.push(box);
+        }
+    });
+
+    rubixGroup.forEach((rubixBlock) => {
+        const currentMeshRef = meshRefs.get(rubixBlock.props.position)?.current;
+        rotateAboutPoint(currentMeshRef, new THREEVector3(1, 0, 0), new THREEVector3(1, 0, 0), Math.PI / 2, false);
+        //currentMeshRef?.rotateOnAxis();
+        console.log("rotating");
+        //currentMeshRef?.rotateOnWorldAxis(new THREEVector3(0, 0, 0), 2);
+    });
 
 }
 
 export const ThreeTestingComponent = () => {
 
-    /*
-    useEffect(() => {
+    const { size, viewport } = useThree();
+    const aspect = size.width / viewport.width;
 
-        console.log("preparing drag events");
+    const [spring, set] = useSpring(() => ({ scale: [1, 1, 1], position: [0, 0, 0], rotation: [0, 0, 0]}));
+    const gestures = useGesture({
+        onDrag: ({offset: [x, y]}) => {
 
-        window.addEventListener("dragstart", (ev: DragEvent) => dragStart(ev));
-        window.addEventListener("dragend", dragEnd);
-
-        return () => {
-            // cleanup
-            window.removeEventListener("dragstart", (ev: DragEvent) => dragStart(ev));
-            window.removeEventListener("dragend", dragEnd);
-        }
-
-    });
-    */
-
-
-    const rubiksCubeBoxes = [];
+            const [currentY, currentX]  = spring.rotation.get();
+            console.log("x: " + currentX);
+            console.log("y: " + currentY);
     
-    for (let x=-1; x<2; x++) {
-        for (let y=-1; y<2; y++) {
-            for (let z=-1; z<2; z++) {
-                rubiksCubeBoxes.push(
-                    <Box 
-                        key={`box-${x}${y}${z}`}
-                        position={[x, y, z]}
-                    >
-                    </Box>
-                );
-            }
+            set({ rotation: [currentY / aspect + y / aspect, currentX / aspect + x / aspect, 0] });
         }
-    }
+    });
+    const draggingProps: any = {...gestures()};
+    const springProps: any = {...spring};
+
+
     return <>
-        <div style={{width: "100vw", height: "100vh"}}>
-            <Canvas flat linear
-            >
-                <ambientLight/>
-                <pointLight position={[10, 10, 10]} />
-                {
-                    rubiksCubeBoxes
-                }
-            </Canvas>
-        </div>
+        <a.group {...springProps} {...draggingProps}>
+            {
+                <RubiksContext.Consumer>
+                    {
+                        ({rubiksCubeBlocks}) => {
+                            return rubiksCubeBlocks;
+                        }
+                    }
+                </RubiksContext.Consumer>
+            }
+        </a.group>
     </>;
 }
