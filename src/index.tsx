@@ -11,46 +11,9 @@ const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
 
-const rubiksCubeBoxes = [];
-    
-for (let x=-1; x<2; x++) {
-    for (let y=-1; y<2; y++) {
-        for (let z=-1; z<2; z++) {
-
-            if (z === 0 && x === 0 && y === 0) continue;
-
-            rubiksCubeBoxes.push(
-                <Box 
-                    key={`box-${x}${y}${z}`}
-                    position={[x, y, z]}
-                >
-                </Box>
-            );
-        }
-    }
-}
-
 root.render(
   <React.StrictMode>
-        <div
-          style={{
-            width: "100vw", 
-            height: "100vh",
-            position: "relative",
-            zIndex: "999"
-          }}
-        >
-          <Canvas 
-              flat 
-              linear
-          >
-            <RubiksContext.Provider value={{
-              rubiksCubeBlocks: rubiksCubeBoxes
-            }}>  
-              <ThreeTestingComponent/>
-            </RubiksContext.Provider>
-          </Canvas>
-        </div>
+    <App></App>
   </React.StrictMode>
 );
 
