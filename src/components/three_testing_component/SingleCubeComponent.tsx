@@ -1,5 +1,6 @@
 // import { Canvas, useFrame } from "@react-three/fiber";
 // import { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import * as THREE from "three";
 
 function Plane(props: {
@@ -36,6 +37,7 @@ interface SingleCubeComponentProps {
     back: string;
   };
 }
+
 export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   color,
 }) => {

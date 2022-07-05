@@ -7,9 +7,12 @@ import { Box, ThreeTestingComponent } from './components/three_testing_component
 import { Vector3 } from 'three';
 
 const rubiksCubeBoxes: JSX.Element[] = [];
-    
+
+
 for (let x=-1; x<2; x++) {
+
     for (let y=-1; y<2; y++) {
+
         for (let z=-1; z<2; z++) {
 
             if (z === 0 && x === 0 && y === 0) continue;
@@ -27,7 +30,8 @@ for (let x=-1; x<2; x++) {
 
 function App() {
 
-  const [clickedPosition, setClickedPosition] = useState(new Vector3(0, 0, 0));
+  const [clickedPosition, setClickedPosition] = 
+    useState(new Vector3(0, 0, 0));
     
   return <>
     <div
@@ -42,6 +46,7 @@ function App() {
           flat 
           linear
       >
+        Camera
         <RubiksContext.Provider value={{
           rubiksCubeBlocks: rubiksCubeBoxes,
           clickedPosition: clickedPosition,
