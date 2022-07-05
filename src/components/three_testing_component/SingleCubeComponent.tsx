@@ -13,9 +13,9 @@ function Plane(props: {
   rotation: THREE.Euler;
   color: THREE.Color;
 }) {
-  return (
+  return <>
     <mesh
-      position={props.position.multiplyScalar(props.scale)}
+      position={props.position}
       rotation={props.rotation}
     >
       <planeBufferGeometry
@@ -29,7 +29,7 @@ function Plane(props: {
         attach="material"
       />
     </mesh>
-  );
+  </>;
 }
 interface SingleCubeComponentProps {
   color: {
@@ -100,7 +100,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
     cube.push(
       <Plane
         key={`plane-${facePositions[i].x}/${facePositions[i].y}/${facePositions[i].z}`}
-        scale={1}
+        scale={0.9}
         position={facePositions[i]}
         rotation={faceRotations[i]}
         color={faceColors[i]}

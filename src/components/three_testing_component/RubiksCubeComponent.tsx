@@ -81,6 +81,20 @@ export const RubikscubeComponent = () => {
 
     return <>
         <group>
+        <mesh
+            position={[0, 0, 0]}
+        >
+            <planeBufferGeometry
+                args={[3, 3, 3]}
+                attach="geometry"
+            />
+            <meshBasicMaterial
+                color={"black"} 
+                // roughness={0.3}
+                // metalness={0.3}
+                attach="material"
+            />
+        </mesh>
             {
                 <RubiksContext.Consumer>
                     {
