@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@react-spring/three": "^9.4.5",
     "@react-three/fiber": "^8.0.27",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
@@ -11,6 +12,8 @@
     "@types/node": "^16.11.43",
     "@types/react": "^18.0.14",
     "@types/react-dom": "^18.0.5",
+    "@types/three": "^0.141.0",
+    "@use-gesture/react": "^10.2.16",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -41,5 +44,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
+    "eslint": "^8.19.0",
+    "eslint-plugin-react": "^7.30.1"
   }
 }
