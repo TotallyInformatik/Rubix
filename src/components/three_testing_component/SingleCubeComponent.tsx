@@ -121,6 +121,8 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
             onClick={(e) => {
               e.stopPropagation();
               setClickedPosition!(position);
+              console.log(clickedPosition);
+              console.log(cubeRefs);
             }}
           >
             {cube}
