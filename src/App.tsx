@@ -8,6 +8,7 @@ import { Vector3 } from 'three';
 import { CameraController } from './components/three_testing_component/CameraController';
 import { SingleCubeComponent } from './components/three_testing_component/SingleCubeComponent';
 
+
 const rubiksCubeBoxes: JSX.Element[] = [];
 
 
@@ -70,7 +71,10 @@ function App() {
           cubeRefs: meshRefs,
           setCubeRefs: (key: Vector3, value: React.MutableRefObject<THREE.Mesh>) => {
             const currentCubeRefs = meshRefs;
-            currentCubeRefs.set(key, value);
+            if (!currentCubeRefs.has(key)) {
+              // wieso muss ich diese If-Abfrage noch machen? Ist doch eigentlich eine Map?
+              currentCubeRefs.set(key, value);
+            }
             setMeshRefs(currentCubeRefs);
           }
         }}>  

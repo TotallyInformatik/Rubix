@@ -1,5 +1,5 @@
 import { useSpring, a } from "@react-spring/three";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
 import { useDrag, useGesture } from "@use-gesture/react";
 import React, { DragEvent, DragEventHandler, useEffect, useRef, useState } from "react"
 import THREE, { Mesh, Object3D, Vector3, ZeroCurvatureEnding } from "three";
