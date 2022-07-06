@@ -15,11 +15,11 @@ function Plane(props: {
 }) {
   return <>
     <mesh
-      position={props.position}
+      position={props.position.multiplyScalar(props.scale)}
       rotation={props.rotation}
     >
       <planeBufferGeometry
-        args={[1 * props.scale, 1 * props.scale]}
+        args={[0.9 * props.scale, 0.9 * props.scale]}
         attach="geometry"
       />
       <meshBasicMaterial
@@ -52,17 +52,17 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   const facePositions: THREE.Vector3[] = [
     //from front view
     //top plane
-    new THREE.Vector3(0, 0.5, 0).add(position),
-    //bottom plane
-    new THREE.Vector3(0, -0.5, 0).add(position),
+    new THREE.Vector3(0, 0.45, 0).add(position),
+    //bottom plane5
+    new THREE.Vector3(0, -0.45, 0).add(position),
     //left plane
-    new THREE.Vector3(-0.5, 0, 0).add(position),
+    new THREE.Vector3(-0.45, 0, 0).add(position),
     //right plane
-    new THREE.Vector3(0.5, 0, 0).add(position),
+    new THREE.Vector3(0.45, 0, 0).add(position),
     //front plane
-    new THREE.Vector3(0, 0, 0.5).add(position),
+    new THREE.Vector3(0, 0, 0.45).add(position),
     //back plane
-    new THREE.Vector3(0, 0, -0.5).add(position),
+    new THREE.Vector3(0, 0, -0.45).add(position),
   ];
   const faceRotations: THREE.Euler[] = [
     //from front view
@@ -100,7 +100,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
     cube.push(
       <Plane
         key={`plane-${facePositions[i].x}/${facePositions[i].y}/${facePositions[i].z}`}
-        scale={0.9}
+        scale={1}
         position={facePositions[i]}
         rotation={faceRotations[i]}
         color={faceColors[i]}
