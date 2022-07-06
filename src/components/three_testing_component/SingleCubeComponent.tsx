@@ -121,15 +121,17 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
             position={position}
             onClick={(e) => {
               e.stopPropagation();
-              setClickedPosition!(meshRef.current.position);
-              console.log(meshRef.current.position);
+              const currentPosition = meshRef.current.position;
+              setClickedPosition!(currentPosition);
+              console.log(currentPosition);
 
               // testing 
 
               // getting all of the cubes in the same x-z-layer (y-position stays same)
-
+              // * this is only a test
               
-              const currentY = meshRef.current.position.y;
+              /*
+              const currentY = currentPosition.y;
               const allBoxesInPlane: React.MutableRefObject<THREE.Mesh>[] = [];
 
               cubeRefs?.forEach((ref, position) => {
@@ -139,6 +141,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
               });
 
               rotateRubiks(allBoxesInPlane, new Vector3(0, 1, 0), new Vector3(0, 1, 0), Math.PI / 2);
+              */
 
               // * this works.
 
