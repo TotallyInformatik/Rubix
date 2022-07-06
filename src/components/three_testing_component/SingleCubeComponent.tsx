@@ -4,6 +4,7 @@ import React, { useRef, useState } from "react";
 import * as THREE from "three";
 import { Vector3 } from "three";
 import { RubiksContext } from "../RubiksContext";
+import rotateRubiks from "./RubiksCubeComponent";
 
 
 
@@ -48,21 +49,20 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   position
 }) => {
 
-
   const facePositions: THREE.Vector3[] = [
     //from front view
     //top plane
-    new THREE.Vector3(0, 0.45, 0).add(position),
+    new THREE.Vector3(0, 0.45, 0),
     //bottom plane5
-    new THREE.Vector3(0, -0.45, 0).add(position),
+    new THREE.Vector3(0, -0.45, 0),
     //left plane
-    new THREE.Vector3(-0.45, 0, 0).add(position),
+    new THREE.Vector3(-0.45, 0, 0),
     //right plane
-    new THREE.Vector3(0.45, 0, 0).add(position),
+    new THREE.Vector3(0.45, 0, 0),
     //front plane
-    new THREE.Vector3(0, 0, 0.45).add(position),
+    new THREE.Vector3(0, 0, 0.45),
     //back plane
-    new THREE.Vector3(0, 0, -0.45).add(position),
+    new THREE.Vector3(0, 0, -0.45),
   ];
   const faceRotations: THREE.Euler[] = [
     //from front view
@@ -109,20 +109,39 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   }
 
 
-  const mesh = useRef<THREE.Mesh>(null!);
+  const meshRef = useRef<THREE.Mesh>(null!);
   return <>
     <RubiksContext.Consumer> 
       {
         ({setClickedPosition, clickedPosition, setCubeRefs, cubeRefs}) => {
-          setCubeRefs!(position, mesh);
+          setCubeRefs!(position, meshRef);
 
           return <mesh
-            ref={mesh}
+            ref={meshRef}
+            position={position}
             onClick={(e) => {
               e.stopPropagation();
-              setClickedPosition!(position);
-              console.log(clickedPosition);
-              console.log(cubeRefs);
+              setClickedPosition!(meshRef.current.position);
+              console.log(meshRef.current.position);
+
+              // testing 
+
+              // getting all of the cubes in the same x-z-layer (y-position stays same)
+
+              
+              const currentY = clickedPosition!.y;
+              const allBoxesInPlane: React.MutableRefObject<THREE.Mesh>[] = [];
+
+              cubeRefs?.forEach((ref, position) => {
+                if (ref.current.position.y == currentY) {
+                  allBoxesInPlane.push(ref);
+                }
+              });
+
+              rotateRubiks(allBoxesInPlane, new Vector3(0, 1, 0), new Vector3(0, 1, 0), Math.PI / 2);
+
+              // * this works.
+
             }}
           >
             {cube}

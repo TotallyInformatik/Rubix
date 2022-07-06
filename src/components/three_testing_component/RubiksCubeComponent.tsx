@@ -5,7 +5,6 @@ import React, { DragEvent, DragEventHandler, useEffect, useRef, useState } from 
 import THREE, { Mesh, Object3D, Vector3, ZeroCurvatureEnding } from "three";
 import { RubiksContext } from "../RubiksContext";
 
-const meshRefs: Map<Vector3, React.MutableRefObject<THREE.Mesh>> = new Map();
 
 
 function rotateAboutPoint(obj: any, point: Vector3, axis: Vector3, theta: number, pointIsWorld: boolean){
@@ -26,20 +25,17 @@ function rotateAboutPoint(obj: any, point: Vector3, axis: Vector3, theta: number
     obj.rotateOnAxis(axis, theta); // rotate the OBJECT
 }
 
-function rotateRubiks(rubiksCubeBoxes: JSX.Element[], positionIndex: number, position: number) {
+/**
+ * @param rubiksCubeBoxes array of refs to the rubikscube boxes that should be rotated. (should all be located in one plane)
+ * @param point (idk just input the same value as axis)
+ * @param axis (the axis around which the boxes should be rotated -> x-axis: {1, 0, 0}, y-axis: {0, 1, 0}, ... )
+ * @param theta the angle of rotation
+ */
+export default function rotateRubiks(rubiksCubeBoxes: React.MutableRefObject<THREE.Mesh>[], point: Vector3, axis: Vector3, theta: number) {
 
-    // testing rotation animation:
-    const rubixGroup: JSX.Element[] = [];
-    rubiksCubeBoxes.forEach((box) => {
-        console.log(box.props.position);
-        if (box.props.position[positionIndex] === position) {
-            rubixGroup.push(box);
-        }
-    });
-
-    rubixGroup.forEach((rubixBlock) => {
-        const currentMeshRef = meshRefs.get(rubixBlock.props.position)?.current;
-        rotateAboutPoint(currentMeshRef, new Vector3(1, 0, 0), new Vector3(1, 0, 0), Math.PI / 2, false);
+    rubiksCubeBoxes.forEach((rubixCubeBox) => {
+        const currentMeshRef = rubixCubeBox.current;
+        rotateAboutPoint(currentMeshRef, point, axis, theta, false);
         //currentMeshRef?.rotateOnAxis();
         console.log("rotating");
         //currentMeshRef?.rotateOnWorldAxis(new THREEVector3(0, 0, 0), 2);
