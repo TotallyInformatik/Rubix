@@ -5,15 +5,12 @@ import * as THREE from "three";
 import { RubiksContext } from "../RubiksContext";
 import rotateRubiks from "./RubiksCubeComponent";
 
-
-
 function Plane(props: {
   scale: number;
   position: THREE.Vector3;
   rotation: THREE.Euler;
   color: THREE.Color;
 }) {
-
   const offsetPosition = new THREE.Vector3();
   offsetPosition.copy(props.position);
   offsetPosition.multiplyScalar(1.01);
@@ -21,38 +18,34 @@ function Plane(props: {
   console.log(offsetPosition);
   console.log(props.position);
 
-  return <>
-    <mesh
-      position={props.position}
-      rotation={props.rotation}
-    >
-      <planeBufferGeometry
-        args={[1 * props.scale, 1 * props.scale]}
-        attach="geometry"
-      />
-      <meshBasicMaterial
-        color={new THREE.Color("black")}
-        // roughness={0.3}
-        // metalness={0.3}
-        attach="material"
-      />
-    </mesh>
-    <mesh
-      position={offsetPosition}
-      rotation={props.rotation}
-    >
-      <planeBufferGeometry
-        args={[0.9 * props.scale, 0.9 * props.scale]}
-        attach="geometry"
-      />
-      <meshBasicMaterial
-        color={props.color}
-        // roughness={0.3}
-        // metalness={0.3}
-        attach="material"
-      />
-    </mesh>
-  </>;
+  return (
+    <>
+      <mesh position={props.position} rotation={props.rotation}>
+        <planeBufferGeometry
+          args={[1 * props.scale, 1 * props.scale]}
+          attach="geometry"
+        />
+        <meshBasicMaterial
+          color={new THREE.Color("black")}
+          // roughness={0.3}
+          // metalness={0.3}
+          attach="material"
+        />
+      </mesh>
+      <mesh position={offsetPosition} rotation={props.rotation}>
+        <planeBufferGeometry
+          args={[0.9 * props.scale, 0.9 * props.scale]}
+          attach="geometry"
+        />
+        <meshBasicMaterial
+          color={props.color}
+          // roughness={0.3}
+          // metalness={0.3}
+          attach="material"
+        />
+      </mesh>
+    </>
+  );
 }
 interface SingleCubeComponentProps {
   color: {
@@ -62,15 +55,14 @@ interface SingleCubeComponentProps {
     right: string;
     front: string;
     back: string;
-  },
-  position: THREE.Vector3
+  };
+  position: THREE.Vector3;
 }
 
 export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   color,
-  position
+  position,
 }) => {
-
   const facePositions: THREE.Vector3[] = [
     //from front view
     //top plane
@@ -130,29 +122,29 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
     );
   }
 
-
   const meshRef = useRef<THREE.Mesh>(null!);
-  return <>
-    <RubiksContext.Consumer> 
-      {
-        ({setClickedPosition, clickedPosition, setCubeRefs, cubeRefs}) => {
+  return (
+    <>
+      <RubiksContext.Consumer>
+        {({ setClickedPosition, clickedPosition, setCubeRefs, cubeRefs }) => {
           setCubeRefs!(position, meshRef);
 
-          return <mesh
-            ref={meshRef}
-            position={position}
-            onClick={(e) => {
-              e.stopPropagation();
-              const currentPosition = meshRef.current.position;
-              setClickedPosition!(currentPosition);
-              console.log(currentPosition);
+          return (
+            <mesh
+              ref={meshRef}
+              position={position}
+              onClick={(e) => {
+                e.stopPropagation();
+                const currentPosition = meshRef.current.position;
+                setClickedPosition!(currentPosition);
+                console.log(currentPosition);
 
-              // testing 
+                // testing
 
-              // getting all of the cubes in the same x-z-layer (y-position stays same)
-              // * this is only a test
-              
-              /*
+                // getting all of the cubes in the same x-z-layer (y-position stays same)
+                // * this is only a test
+
+                /*
               const currentY = currentPosition.y;
               const allBoxesInPlane: React.MutableRefObject<THREE.Mesh>[] = [];
 
@@ -165,14 +157,14 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
               rotateRubiks(allBoxesInPlane, new Vector3(0, 1, 0), new Vector3(0, 1, 0), Math.PI / 2);
               */
 
-              // * this works.
-
-            }}
-          >
-            {cube}
-          </mesh>
-        }
-      }
-    </RubiksContext.Consumer>
-  </>;
+                // * this works.
+              }}
+            >
+              {cube}
+            </mesh>
+          );
+        }}
+      </RubiksContext.Consumer>
+    </>
+  );
 };
