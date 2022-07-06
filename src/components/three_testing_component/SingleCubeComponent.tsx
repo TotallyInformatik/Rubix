@@ -2,7 +2,6 @@
 // import { useEffect, useRef, useState } from "react";
 import React, { useRef, useState } from "react";
 import * as THREE from "three";
-import { Vector3 } from "three";
 import { RubiksContext } from "../RubiksContext";
 import rotateRubiks from "./RubiksCubeComponent";
 
@@ -14,9 +13,32 @@ function Plane(props: {
   rotation: THREE.Euler;
   color: THREE.Color;
 }) {
+
+  const offsetPosition = new THREE.Vector3();
+  offsetPosition.copy(props.position);
+  offsetPosition.multiplyScalar(1.01);
+
+  console.log(offsetPosition);
+  console.log(props.position);
+
   return <>
     <mesh
-      position={props.position.multiplyScalar(props.scale)}
+      position={props.position}
+      rotation={props.rotation}
+    >
+      <planeBufferGeometry
+        args={[1 * props.scale, 1 * props.scale]}
+        attach="geometry"
+      />
+      <meshBasicMaterial
+        color={new THREE.Color("black")}
+        // roughness={0.3}
+        // metalness={0.3}
+        attach="material"
+      />
+    </mesh>
+    <mesh
+      position={offsetPosition}
       rotation={props.rotation}
     >
       <planeBufferGeometry
@@ -52,17 +74,17 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   const facePositions: THREE.Vector3[] = [
     //from front view
     //top plane
-    new THREE.Vector3(0, 0.45, 0),
+    new THREE.Vector3(0, 0.5, 0),
     //bottom plane5
-    new THREE.Vector3(0, -0.45, 0),
+    new THREE.Vector3(0, -0.5, 0),
     //left plane
-    new THREE.Vector3(-0.45, 0, 0),
+    new THREE.Vector3(-0.5, 0, 0),
     //right plane
-    new THREE.Vector3(0.45, 0, 0),
+    new THREE.Vector3(0.5, 0, 0),
     //front plane
-    new THREE.Vector3(0, 0, 0.45),
+    new THREE.Vector3(0, 0, 0.5),
     //back plane
-    new THREE.Vector3(0, 0, -0.45),
+    new THREE.Vector3(0, 0, -0.5),
   ];
   const faceRotations: THREE.Euler[] = [
     //from front view
