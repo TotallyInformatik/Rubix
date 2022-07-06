@@ -7,36 +7,6 @@ import { RubiksContext } from "../RubiksContext";
 
 const meshRefs: Map<Vector3, React.MutableRefObject<THREE.Mesh>> = new Map();
 
-export const Box = (props: any) => {
-
-    // This reference will give us direct access to the mesh
-    const mesh = useRef<THREE.Mesh>(null!);
-    const position = props.position;
-    meshRefs.set(position!, mesh);
-    // Return view, these are regular three.js elements expressed in JSX
-    return (
-        <RubiksContext.Consumer>
-            {
-                ({setClickedPosition, clickedPosition}) => {
-                    return <mesh
-                    {...props}
-                    ref={mesh}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        const position = props.position!;
-                        setClickedPosition!(position);
-                        console.log(clickedPosition);
-                    }}
-                    >
-                        <boxGeometry args={[0.8, 0.8, 0.8]}/>
-                        <meshBasicMaterial color={"black"}/>
-                    </mesh>
-                }
-            }
-        </RubiksContext.Consumer>
-    );
-}
-
 
 function rotateAboutPoint(obj: any, point: Vector3, axis: Vector3, theta: number, pointIsWorld: boolean){
     pointIsWorld = (pointIsWorld === undefined)? false : pointIsWorld;

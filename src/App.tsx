@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import { Canvas } from '@react-three/fiber';
 import { RubiksContext } from './components/RubiksContext';
-import { Box, RubikscubeComponent } from './components/three_testing_component/RubiksCubeComponent';
+import { RubikscubeComponent } from './components/three_testing_component/RubiksCubeComponent';
 import { Vector3 } from 'three';
 import { CameraController } from './components/three_testing_component/CameraController';
 import { SingleCubeComponent } from './components/three_testing_component/SingleCubeComponent';
