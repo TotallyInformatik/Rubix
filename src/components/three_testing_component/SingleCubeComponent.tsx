@@ -129,7 +129,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
               // getting all of the cubes in the same x-z-layer (y-position stays same)
 
               
-              const currentY = clickedPosition!.y;
+              const currentY = meshRef.current.position.y;
               const allBoxesInPlane: React.MutableRefObject<THREE.Mesh>[] = [];
 
               cubeRefs?.forEach((ref, position) => {
