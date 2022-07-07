@@ -8,7 +8,6 @@ type RubikContextType = {
   setClickedPosition: (value: THREE.Vector3) => void;
   cubeRefs: React.MutableRefObject<THREE.Mesh>[];
   addCubeRefs: (ref: React.MutableRefObject<THREE.Mesh>) => void;
-
   orbitControls: OrbitControls | null;
   setOrbitControls: (orbitConrols: OrbitControls) => void;
 };
