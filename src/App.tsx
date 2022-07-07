@@ -1,12 +1,15 @@
 import React, { useState } from "react";
-import logo from "./logo.svg";
+
 import "./App.css";
 import { Canvas } from "@react-three/fiber";
-import { RubiksContext } from "./components/RubiksContext";
-import { RubikscubeComponent } from "./components/three_testing_component/RubiksCubeComponent";
-import { Vector3 } from "three";
-import { CameraController } from "./components/three_testing_component/CameraController";
-import { SingleCubeComponent } from "./components/three_testing_component/SingleCubeComponent";
+
+import * as THREE from "three";
+import {
+  CameraController,
+  SingleCubeComponent,
+  RubiksContext,
+} from "./components";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 const rubiksCubeBoxes: JSX.Element[] = [];
 
@@ -18,7 +21,7 @@ for (let x = -1; x < 2; x++) {
       rubiksCubeBoxes.push(
         <SingleCubeComponent
           key={`box-${x}${y}${z}`}
-          position={new Vector3(x, y, z)}
+          position={new THREE.Vector3(x, y, z)}
           color={{
             top: y === 1 ? "orange" : "black",
             bottom: y === -1 ? "red" : "black",
@@ -34,11 +37,15 @@ for (let x = -1; x < 2; x++) {
 }
 
 function App() {
-  const [clickedPosition, setClickedPosition] = useState(new Vector3(0, 0, 0));
+  const [clickedPosition, setClickedPosition] = useState(
+    new THREE.Vector3(0, 0, 0)
+  );
 
   const [meshRefs, setMeshRefs] = useState<
-    Map<Vector3, React.MutableRefObject<THREE.Mesh>>
-  >(new Map());
+    React.MutableRefObject<THREE.Mesh>[]
+  >([]);
+
+  const [orbitControls, setOrbitControls] = useState<OrbitControls>(null!);
 
   return (
     <>
@@ -52,27 +59,58 @@ function App() {
       >
         <Canvas flat linear color="black">
           <color attach="background" args={[0.5, 0.5, 0.5]} />
-          <CameraController />
           <RubiksContext.Provider
             value={{
               rubiksCubeBlocks: rubiksCubeBoxes,
               clickedPosition: clickedPosition,
-              setClickedPosition: (value: Vector3) => setClickedPosition(value),
+              setClickedPosition: (value: THREE.Vector3) =>
+                setClickedPosition(value),
               cubeRefs: meshRefs,
-              setCubeRefs: (
-                key: Vector3,
-                value: React.MutableRefObject<THREE.Mesh>
-              ) => {
-                const currentCubeRefs = meshRefs;
-                if (!currentCubeRefs.has(key)) {
-                  // wieso muss ich diese If-Abfrage noch machen? Ist doch eigentlich eine Map?
-                  currentCubeRefs.set(key, value);
-                }
-                setMeshRefs(currentCubeRefs);
+              addCubeRefs: (ref: React.MutableRefObject<THREE.Mesh>) => {
+                if (meshRefs.includes(ref)) return;
+                meshRefs.push(ref);
+                setMeshRefs(meshRefs);
+              },
+              orbitControls: orbitControls,
+              setOrbitControls: (newOrbitControls: OrbitControls) => {
+                setOrbitControls(newOrbitControls);
               },
             }}
           >
-            <RubikscubeComponent />
+            <CameraController />
+            {/* <RotationTest
+              color={{
+                top: "white",
+                bottom: "green",
+                left: "blue",
+                right: "yellow",
+                front: "red",
+                back: "orange",
+              }}
+              position={new THREE.Vector3(0, 0, 0)}
+            /> */}
+            {rubiksCubeBoxes}
+            <directionalLight
+              castShadow
+              position={[2.5, 8, 5]}
+              shadow-mapSize={[1024, 1024]}
+            >
+              <orthographicCamera
+                attach="shadow-camera"
+                args={[-10, 10, 10, -10]}
+              />
+            </directionalLight>
+            <mesh
+              position={[0, -2, 0]}
+              rotation={[THREE.MathUtils.degToRad(90), 0, 0]}
+            >
+              <planeBufferGeometry attach="geometry" args={[10, 10]} />
+              <meshPhongMaterial
+                attach="material"
+                color="green"
+                side={THREE.DoubleSide}
+              />
+            </mesh>
           </RubiksContext.Provider>
         </Canvas>
       </div>
