@@ -14,7 +14,7 @@ function Plane(props: {
   color: THREE.Color;
   parentCubeRef: React.RefObject<THREE.Mesh>;
 }) {
-  const { orbitControls } = useContext(RubiksContext);
+  const { orbitControls, cubeRefs } = useContext(RubiksContext);
 
   const rotSpeed = 1;
 
@@ -22,6 +22,8 @@ function Plane(props: {
     {
       onDragStart: ({ event }) => {
         event.stopPropagation();
+
+        getRespectiveGroups(cubeRefs)
 
         if (orbitControls) orbitControls.enabled = false;
       },
@@ -215,40 +217,33 @@ function Plane(props: {
   
   return (
     <>
-      <RubiksContext.Consumer>
-        {
-          ({cubeRefs}) => {
-            return <mesh 
-            {...bind() as MeshProps}
-            onClick={() => getRespectiveGroups(cubeRefs)}>
-              <mesh position={props.position} rotation={props.rotation}>
-                <planeBufferGeometry
-                  args={[1 * props.scale, 1 * props.scale]}
-                  attach="geometry"
-                />
-                <meshBasicMaterial
-                  color={new THREE.Color("black")}
-                  // roughness={0.3}
-                  // metalness={0.3}
-                  attach="material"
-                />
-              </mesh>
-              <mesh position={offsetPosition} rotation={props.rotation}>
-                <planeBufferGeometry
-                  args={[0.9 * props.scale, 0.9 * props.scale]}
-                  attach="geometry"
-                />
-                <meshBasicMaterial
-                  color={props.color}
-                  // roughness={0.3}
-                  // metalness={0.3}
-                  attach="material"
-                />
-              </mesh>
-            </mesh>;
-          }
-        }
-      </RubiksContext.Consumer>
+      <mesh 
+      {...bind() as MeshProps}>
+        <mesh position={props.position} rotation={props.rotation}>
+          <planeBufferGeometry
+            args={[1 * props.scale, 1 * props.scale]}
+            attach="geometry"
+          />
+          <meshBasicMaterial
+            color={new THREE.Color("black")}
+            // roughness={0.3}
+            // metalness={0.3}
+            attach="material"
+          />
+        </mesh>
+        <mesh position={offsetPosition} rotation={props.rotation}>
+          <planeBufferGeometry
+            args={[0.9 * props.scale, 0.9 * props.scale]}
+            attach="geometry"
+          />
+          <meshBasicMaterial
+            color={props.color}
+            // roughness={0.3}
+            // metalness={0.3}
+            attach="material"
+          />
+        </mesh>
+      </mesh>
     </>
   );
 }
