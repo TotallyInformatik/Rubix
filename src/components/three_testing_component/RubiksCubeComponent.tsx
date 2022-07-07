@@ -1,20 +1,16 @@
-import { useSpring, a } from "@react-spring/three";
-import { Canvas, ThreeEvent, useFrame, useThree } from "@react-three/fiber";
-import { useDrag, useGesture } from "@use-gesture/react";
 import React, {
-  DragEvent,
-  DragEventHandler,
-  useEffect,
-  useRef,
   useState,
 } from "react";
-import THREE, { Mesh, Object3D, Vector3, ZeroCurvatureEnding } from "three";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { RubiksContext } from "../RubiksContext";
+import { CameraController } from "./CameraController";
+import { SingleCubeComponent } from "./SingleCubeComponent";
 
 function rotateAboutPoint(
   obj: any,
-  point: Vector3,
-  axis: Vector3,
+  point: THREE.Vector3,
+  axis: THREE.Vector3,
   theta: number,
   pointIsWorld: boolean
 ) {
@@ -43,31 +39,85 @@ function rotateAboutPoint(
  */
 export default function rotateRubiks(
   rubiksCubeBoxes: React.MutableRefObject<THREE.Mesh>[],
-  point: Vector3,
-  axis: Vector3,
+  point: THREE.Vector3,
+  axis: THREE.Vector3,
   theta: number
 ) {
   rubiksCubeBoxes.forEach((rubixCubeBox) => {
     const currentMeshRef = rubixCubeBox.current;
     rotateAboutPoint(currentMeshRef, point, axis, theta, false);
-    //currentMeshRef?.rotateOnAxis();
-    console.log("rotating");
-    //currentMeshRef?.rotateOnWorldAxis(new THREEVector3(0, 0, 0), 2);
   });
 }
 
 export const RubikscubeComponent = () => {
+
+  const rubiksCubeBoxes: JSX.Element[] = [];
+
+  for (let x = -1; x < 2; x++) {
+    for (let y = -1; y < 2; y++) {
+      for (let z = -1; z < 2; z++) {
+        if (z === 0 && x === 0 && y === 0) continue;
+
+        rubiksCubeBoxes.push(
+          <SingleCubeComponent
+            key={`box-${x}${y}${z}`}
+            position={new THREE.Vector3(x, y, z)}
+            color={{
+              top: y === 1 ? "orange" : "black",
+              bottom: y === -1 ? "red" : "black",
+              left: x === -1 ? "green" : "black",
+              right: x === 1 ? "blue" : "black",
+              front: z === 1 ? "white" : "black",
+              back: z === -1 ? "yellow" : "black",
+            }}
+          />
+        );
+      }
+    }
+  }
+
+  const [clickedPosition, setClickedPosition] = useState(
+    new THREE.Vector3(0, 0, 0)
+  );
+
+  const [meshRefs, setMeshRefs] = useState<
+    React.MutableRefObject<THREE.Mesh>[]
+  >([]);
+
+  const [orbitControls, setOrbitControls] = useState<OrbitControls>(null!);
+
+
   return (
     <>
-      <group>
-        {
-          <RubiksContext.Consumer>
-            {({ rubiksCubeBlocks }) => {
-              return rubiksCubeBlocks;
-            }}
-          </RubiksContext.Consumer>
-        }
-      </group>
+      <RubiksContext.Provider
+        value={{
+          rubiksCubeBlocks: rubiksCubeBoxes,
+          clickedPosition: clickedPosition,
+          setClickedPosition: (value: THREE.Vector3) =>
+            setClickedPosition(value),
+          cubeRefs: meshRefs,
+          addCubeRefs: (ref: React.MutableRefObject<THREE.Mesh>) => {
+            if (meshRefs.includes(ref)) return;
+            meshRefs.push(ref);
+            setMeshRefs(meshRefs);
+          },
+          orbitControls: orbitControls,
+          setOrbitControls: (newOrbitControls: OrbitControls) => {
+            setOrbitControls(newOrbitControls);
+          },
+        }}
+      >
+        <CameraController />
+        <group>
+          {
+            <RubiksContext.Consumer>
+              {({ rubiksCubeBlocks }) => {
+                return rubiksCubeBlocks;
+              }}
+            </RubiksContext.Consumer>
+          }
+        </group>
+      </RubiksContext.Provider>
     </>
   );
 };

@@ -32,7 +32,6 @@ function Plane(props: {
 
         const rotation = props.parentCubeRef.current?.rotation;
         if (rotation == undefined) return;
-        console.log(mx, my);
 
         const dRotationX = THREE.MathUtils.degToRad(dy * rotSpeed);
         const dRotationY = THREE.MathUtils.degToRad(dx * rotSpeed);
@@ -72,7 +71,6 @@ function Plane(props: {
             //right
             rotationCountY = Math.ceil(rotY / 90);
           }
-          console.log("Y");
           rotation.set(
             rotation.x,
             THREE.MathUtils.degToRad(rotationCountY * 90),
@@ -105,7 +103,6 @@ function Plane(props: {
             //right
             rotationCountX = Math.ceil(rotX / 90);
           }
-          console.log("X");
 
           rotation.set(
             THREE.MathUtils.degToRad(rotationCountX * 90),
@@ -139,7 +136,6 @@ function Plane(props: {
   const test = new THREE.PlaneBufferGeometry(1, 1); // <--
   const normals = test.attributes.normal.array;
   const normal = new THREE.Vector3(normals[0], normals[1], normals[2]);
-  console.log(normal);
 
   const offsetPosition = new THREE.Vector3();
   const [xGroup, setXGroup] = useState<React.MutableRefObject<THREE.Mesh>[]>([]);
@@ -211,7 +207,6 @@ function Plane(props: {
 
     }
 
-    console.log(groups);
 
   }
   
