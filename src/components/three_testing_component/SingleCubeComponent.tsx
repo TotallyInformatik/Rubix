@@ -7,46 +7,123 @@ import rotateRubiks from "./RubiksCubeComponent";
 
 function Plane(props: {
   scale: number;
+  respectiveCubePosition: THREE.Vector3; // the position of the cube this plane belongs to.
   position: THREE.Vector3;
   rotation: THREE.Euler;
   color: THREE.Color;
 }) {
   const offsetPosition = new THREE.Vector3();
+  const [xGroup, setXGroup] = useState<React.MutableRefObject<THREE.Mesh>[]>([]);
+  const [zGroup, setZGroup] = useState<React.MutableRefObject<THREE.Mesh>[]>([]);
+  const [yGroup, setYGroup] = useState<React.MutableRefObject<THREE.Mesh>[]>([]);
   offsetPosition.copy(props.position);
   offsetPosition.multiplyScalar(1.01);
 
-  console.log(offsetPosition);
-  console.log(props.position);
 
+  const getRespectiveGroups = (cubeRefs: React.MutableRefObject<THREE.Mesh>[] | undefined) => {
+    if (cubeRefs === undefined) return;
+    
+
+    const groups = [];
+    const rotation = props.rotation;
+
+    // yGroup: Y Coordinate stays the same
+    if (rotation.x == 0 || rotation.x == Math.PI) {
+      groups.push("y");
+      const yGroup = [];
+      const yCoordinate = props.respectiveCubePosition.y;
+      for (const cubeRef of cubeRefs) {
+        const currentRef = cubeRef.current;
+  
+        if (currentRef.position.y == yCoordinate) {
+          yGroup.push(cubeRef);
+        }
+      }
+    }
+
+    setYGroup(yGroup);
+
+
+    if (rotation.y == 0) {
+      groups.push("x");
+
+      // xGroup: X Coordinate stays the same
+      const xGroup = [];
+      const xCoordinate = props.respectiveCubePosition.x;
+      for (const cubeRef of cubeRefs) {
+        const currentRef = cubeRef.current;
+
+        if (currentRef.position.x == xCoordinate) {
+          xGroup.push(cubeRef);
+        }
+      }
+
+      setXGroup(xGroup);
+
+    }
+
+
+    if ([Math.PI / 2, -Math.PI / 2].includes(rotation.x) || [Math.PI / 2, -Math.PI / 2].includes(rotation.y)) {
+      groups.push("z");
+      
+      // zGroup: Z Coordinate stays the same
+      const zGroup = [];
+      const zCoordinate = props.respectiveCubePosition.z;
+      for (const cubeRef of cubeRefs) {
+        const currentRef = cubeRef.current;
+
+        if (currentRef.position.z == zCoordinate) {
+          zGroup.push(cubeRef);
+        }
+      }
+
+      setZGroup(zGroup);
+
+
+    }
+
+    console.log(groups);
+
+  }
+  
   return (
     <>
-      <mesh position={props.position} rotation={props.rotation}>
-        <planeBufferGeometry
-          args={[1 * props.scale, 1 * props.scale]}
-          attach="geometry"
-        />
-        <meshBasicMaterial
-          color={new THREE.Color("black")}
-          // roughness={0.3}
-          // metalness={0.3}
-          attach="material"
-        />
-      </mesh>
-      <mesh position={offsetPosition} rotation={props.rotation}>
-        <planeBufferGeometry
-          args={[0.9 * props.scale, 0.9 * props.scale]}
-          attach="geometry"
-        />
-        <meshBasicMaterial
-          color={props.color}
-          // roughness={0.3}
-          // metalness={0.3}
-          attach="material"
-        />
-      </mesh>
+      <RubiksContext.Consumer>
+        {
+          ({cubeRefs}) => {
+            return <mesh onClick={() => getRespectiveGroups(cubeRefs)}>
+              <mesh position={props.position} rotation={props.rotation}>
+                <planeBufferGeometry
+                  args={[1 * props.scale, 1 * props.scale]}
+                  attach="geometry"
+                />
+                <meshBasicMaterial
+                  color={new THREE.Color("black")}
+                  // roughness={0.3}
+                  // metalness={0.3}
+                  attach="material"
+                />
+              </mesh>
+              <mesh position={offsetPosition} rotation={props.rotation}>
+                <planeBufferGeometry
+                  args={[0.9 * props.scale, 0.9 * props.scale]}
+                  attach="geometry"
+                />
+                <meshBasicMaterial
+                  color={props.color}
+                  // roughness={0.3}
+                  // metalness={0.3}
+                  attach="material"
+                />
+              </mesh>
+            </mesh>;
+          }
+        }
+      </RubiksContext.Consumer>
     </>
   );
 }
+
 interface SingleCubeComponentProps {
   color: {
     top: string;
@@ -115,6 +192,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
       <Plane
         key={`plane-${facePositions[i].x}/${facePositions[i].y}/${facePositions[i].z}`}
         scale={1}
+        respectiveCubePosition={position}
         position={facePositions[i]}
         rotation={faceRotations[i]}
         color={faceColors[i]}
@@ -126,8 +204,9 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
   return (
     <>
       <RubiksContext.Consumer>
-        {({ setClickedPosition, clickedPosition, setCubeRefs, cubeRefs }) => {
-          setCubeRefs!(position, meshRef);
+        {({ setClickedPosition, addCubeRefs, cubeRefs}) => {
+          addCubeRefs!(meshRef);
+
 
           return (
             <mesh
@@ -135,29 +214,12 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
               position={position}
               onClick={(e) => {
                 e.stopPropagation();
+
                 const currentPosition = meshRef.current.position;
                 setClickedPosition!(currentPosition);
-                console.log(currentPosition);
 
-                // testing
 
-                // getting all of the cubes in the same x-z-layer (y-position stays same)
-                // * this is only a test
 
-                /*
-              const currentY = currentPosition.y;
-              const allBoxesInPlane: React.MutableRefObject<THREE.Mesh>[] = [];
-
-              cubeRefs?.forEach((ref, position) => {
-                if (ref.current.position.y == currentY) {
-                  allBoxesInPlane.push(ref);
-                }
-              });
-
-              rotateRubiks(allBoxesInPlane, new Vector3(0, 1, 0), new Vector3(0, 1, 0), Math.PI / 2);
-              */
-
-                // * this works.
               }}
             >
               {cube}

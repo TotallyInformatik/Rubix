@@ -35,10 +35,7 @@ for (let x = -1; x < 2; x++) {
 
 function App() {
   const [clickedPosition, setClickedPosition] = useState(new Vector3(0, 0, 0));
-
-  const [meshRefs, setMeshRefs] = useState<
-    Map<Vector3, React.MutableRefObject<THREE.Mesh>>
-  >(new Map());
+  const [meshRefs, setMeshRefs] = useState<React.MutableRefObject<THREE.Mesh>[]>([]);
 
   return (
     <>
@@ -59,16 +56,10 @@ function App() {
               clickedPosition: clickedPosition,
               setClickedPosition: (value: Vector3) => setClickedPosition(value),
               cubeRefs: meshRefs,
-              setCubeRefs: (
-                key: Vector3,
-                value: React.MutableRefObject<THREE.Mesh>
-              ) => {
-                const currentCubeRefs = meshRefs;
-                if (!currentCubeRefs.has(key)) {
-                  // wieso muss ich diese If-Abfrage noch machen? Ist doch eigentlich eine Map?
-                  currentCubeRefs.set(key, value);
-                }
-                setMeshRefs(currentCubeRefs);
+              addCubeRefs: (ref: React.MutableRefObject<THREE.Mesh>) => {
+                if (meshRefs.includes(ref)) return;
+                meshRefs.push(ref);
+                setMeshRefs(meshRefs);
               },
             }}
           >
