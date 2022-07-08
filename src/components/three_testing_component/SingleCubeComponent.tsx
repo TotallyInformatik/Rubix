@@ -4,6 +4,7 @@ import { MeshProps } from "@react-three/fiber";
 import { useGesture } from "@use-gesture/react";
 import React, { useRef, useState, useContext } from "react";
 import * as THREE from "three";
+import { Mesh } from "three";
 import { RubiksContext } from "../RubiksContext";
 
 function Plane(props: {
@@ -14,21 +15,40 @@ function Plane(props: {
   color: THREE.Color;
   parentCubeRef: React.RefObject<THREE.Mesh>;
 }) {
-  const { orbitControls, cubeRefs } = useContext(RubiksContext);
+
+  //const [currentlyDragging, setCurrentlyDragging] = useState<boolean>(false);
+  //const [draggedMesh, setDraggedMesh] = useState<React.RefObject<THREE.Mesh>>(null!);
+
+  const { orbitControls, cubeRefs, currentDraggedCube, setCurrentDraggedCube } = useContext(RubiksContext);
 
   const rotSpeed = 1;
 
   const bind = useGesture(
     {
       onDragStart: ({ event }) => {
+
         event.stopPropagation();
+
+        /*
+        if (currentDraggedCube != null) {
+          return;
+        }
+
+        setCurrentDraggedCube!(props.parentCubeRef);
+        console.log("starting new drag event");
+        */
+
 
         getRespectiveGroups(cubeRefs)
 
         if (orbitControls) orbitControls.enabled = false;
+
       },
       onDrag: ({ event, delta: [dx, dy], movement: [mx, my] }) => {
+
+
         event.stopPropagation();
+        //if (currentDraggedCube != props.parentCubeRef) return;
 
         const rotation = props.parentCubeRef.current?.rotation;
         if (rotation == undefined) return;
@@ -42,7 +62,16 @@ function Plane(props: {
           rotation.z
         );
       },
-      onDragEnd: ({ movement: [mx, my] }) => {
+      onDragEnd: ({ event, movement: [mx, my] }) => {
+
+        event.stopPropagation();
+
+        /*
+        console.log("stopping new drag event");
+
+        setCurrentDraggedCube!(null);
+        */
+
         const rotation = props.parentCubeRef.current?.rotation;
 
         if (rotation == undefined) return;
@@ -129,13 +158,10 @@ function Plane(props: {
       //lock rotation for direction
       drag: {
         axis: "lock",
+        filterTaps: true,
       },
     }
   );
-
-  const test = new THREE.PlaneBufferGeometry(1, 1); // <--
-  const normals = test.attributes.normal.array;
-  const normal = new THREE.Vector3(normals[0], normals[1], normals[2]);
 
   const offsetPosition = new THREE.Vector3();
   const [xGroup, setXGroup] = useState<React.MutableRefObject<THREE.Mesh>[]>([]);

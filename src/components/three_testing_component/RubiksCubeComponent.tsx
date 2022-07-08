@@ -86,6 +86,8 @@ export const RubikscubeComponent = () => {
 
   const [orbitControls, setOrbitControls] = useState<OrbitControls>(null!);
 
+  const [draggedMesh, setDraggedMesh] = useState<React.RefObject<THREE.Mesh> | null>(null);
+
 
   return (
     <>
@@ -105,6 +107,10 @@ export const RubikscubeComponent = () => {
           setOrbitControls: (newOrbitControls: OrbitControls) => {
             setOrbitControls(newOrbitControls);
           },
+          currentDraggedCube: draggedMesh,
+          setCurrentDraggedCube: (newCurrentDraggedCube: React.RefObject<THREE.Mesh> | null) => {
+            setDraggedMesh(newCurrentDraggedCube);
+          }
         }}
       >
         <CameraController />
