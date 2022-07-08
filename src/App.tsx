@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, SyntheticEvent } from "react";
 
 import "./App.css";
 import { Canvas } from "@react-three/fiber";
@@ -10,6 +10,7 @@ import {
   RubiksContext,
 } from "./components";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { Euler, Vector3 } from "three";
 
 const rubiksCubeBoxes: JSX.Element[] = [];
 
@@ -30,6 +31,7 @@ for (let x = -1; x < 2; x++) {
             front: z === 1 ? "white" : "black",
             back: z === -1 ? "yellow" : "black",
           }}
+          debug={false}
         />
       );
     }
@@ -46,6 +48,8 @@ function App() {
   >([]);
 
   const [orbitControls, setOrbitControls] = useState<OrbitControls>(null!);
+
+  const [mesh1, setMesh1] = useState<THREE.Mesh>();
 
   return (
     <>
@@ -78,28 +82,15 @@ function App() {
             }}
           >
             <CameraController />
-            {/* <RotationTest
-              color={{
-                top: "white",
-                bottom: "green",
-                left: "blue",
-                right: "yellow",
-                front: "red",
-                back: "orange",
-              }}
-              position={new THREE.Vector3(0, 0, 0)}
-            /> */}
+
             {rubiksCubeBoxes}
+
             <directionalLight
               castShadow
               position={[2.5, 8, 5]}
               shadow-mapSize={[1024, 1024]}
-            >
-              <orthographicCamera
-                attach="shadow-camera"
-                args={[-10, 10, 10, -10]}
-              />
-            </directionalLight>
+            />
+
             <mesh
               position={[0, -2, 0]}
               rotation={[THREE.MathUtils.degToRad(90), 0, 0]}
