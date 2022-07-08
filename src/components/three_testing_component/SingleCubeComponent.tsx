@@ -39,7 +39,7 @@ function Plane(props: {
         */
 
 
-        getRespectiveGroups(cubeRefs)
+        getRespectiveGroups(cubeRefs);
 
         if (orbitControls) orbitControls.enabled = false;
 
