@@ -1,13 +1,11 @@
-import React, {
-  useState,
-} from "react";
+import React, { useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { RubiksContext } from "../RubiksContext";
 import { CameraController } from "./CameraController";
 import { SingleCubeComponent } from "./SingleCubeComponent";
 
-function rotateAboutPoint(
+export function rotateAboutPoint(
   obj: any,
   point: THREE.Vector3,
   axis: THREE.Vector3,
@@ -37,7 +35,7 @@ function rotateAboutPoint(
  * @param axis (the axis around which the boxes should be rotated -> x-axis: {1, 0, 0}, y-axis: {0, 1, 0}, ... )
  * @param theta the angle of rotation
  */
-export default function rotateRubiks(
+export function rotateRubiks(
   rubiksCubeBoxes: React.MutableRefObject<THREE.Mesh>[],
   point: THREE.Vector3,
   axis: THREE.Vector3,
@@ -50,7 +48,6 @@ export default function rotateRubiks(
 }
 
 export const RubikscubeComponent = () => {
-
   const rubiksCubeBoxes: JSX.Element[] = [];
 
   for (let x = -1; x < 2; x++) {
@@ -86,8 +83,8 @@ export const RubikscubeComponent = () => {
 
   const [orbitControls, setOrbitControls] = useState<OrbitControls>(null!);
 
-  const [draggedMesh, setDraggedMesh] = useState<React.RefObject<THREE.Mesh> | null>(null);
-
+  const [draggedMesh, setDraggedMesh] =
+    useState<React.RefObject<THREE.Mesh> | null>(null);
 
   return (
     <>
@@ -108,9 +105,11 @@ export const RubikscubeComponent = () => {
             setOrbitControls(newOrbitControls);
           },
           currentDraggedCube: draggedMesh,
-          setCurrentDraggedCube: (newCurrentDraggedCube: React.RefObject<THREE.Mesh> | null) => {
+          setCurrentDraggedCube: (
+            newCurrentDraggedCube: React.RefObject<THREE.Mesh> | null
+          ) => {
             setDraggedMesh(newCurrentDraggedCube);
-          }
+          },
         }}
       >
         <CameraController />

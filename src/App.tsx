@@ -3,10 +3,7 @@ import "./App.css";
 import { Canvas } from "@react-three/fiber";
 
 import * as THREE from "three";
-import {
-  RubikscubeComponent,
-} from "./components";
-
+import { RubikscubeComponent } from "./components";
 
 function App() {
   return (
@@ -32,17 +29,7 @@ function App() {
               args={[-10, 10, 10, -10]}
             />
           </directionalLight>
-          <mesh
-            position={[0, -2, 0]}
-            rotation={[THREE.MathUtils.degToRad(90), 0, 0]}
-          >
-            <planeBufferGeometry attach="geometry" args={[10, 10]} />
-            <meshPhongMaterial
-              attach="material"
-              color="green"
-              side={THREE.DoubleSide}
-            />
-          </mesh>
+          <primitive object={new THREE.AxesHelper(10)} />
         </Canvas>
       </div>
     </>
