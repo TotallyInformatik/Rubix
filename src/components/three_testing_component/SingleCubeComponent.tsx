@@ -6,7 +6,7 @@ import React, { useRef, useState, useContext } from "react";
 import * as THREE from "three";
 import { MathUtils, Mesh, RGB_PVRTC_2BPPV1_Format } from "three";
 import { RubiksContext } from "../RubiksContext";
-import { rotateAboutPoint, rotateRubiks } from "./RubiksCubeComponent";
+import { rotateAboutPoint, rotateRubiks, roundToNearest90, setRotationRubiks } from "./RubiksCubeComponent";
 
 function Plane(props: {
   scale: number;
@@ -16,6 +16,7 @@ function Plane(props: {
   color: THREE.Color;
   parentCubeRef: React.RefObject<THREE.Mesh>;
 }) {
+
   const getRespectiveGroups = (
     cubeRefs: React.MutableRefObject<THREE.Mesh>[] | undefined
   ) => {
@@ -184,10 +185,8 @@ function Plane(props: {
         }
 
         if (Math.abs(dx) > Math.abs(dy)) {
-          console.log("horizontal movement");
           currentKey = possibleKeys[index0];
         } else if (Math.abs(dx) < Math.abs(dy)) {
-          console.log("vertical movement");
           currentKey = possibleKeys[index1];
         } else {
           currentKey = possibleKeys[index0];
@@ -209,24 +208,6 @@ function Plane(props: {
           default:
             console.log("error: invalid axis");
         }
-
-        /*
-        const newSelectedGroup = new THREE.Group();
-
-        group.forEach((element) => {
-          // console.log(element.current.position);
-          // element.current.material = new THREE.MeshBasicMaterial({
-          //   color: "black",
-          // });
-          // element.current.material.needsUpdate = true;
-          //element.current.position.x = 2;
-
-          newSelectedGroup.add(element.current);
-        });
-
-        setSelectedGroup(newSelectedGroup);
-        console.log(selectedGroup);
-        */
 
         setSelectedGroup(group);
 
@@ -251,84 +232,46 @@ function Plane(props: {
           )
         );
 
-        /*
-        rotation.set(
-          rotation.x + dRotationX,
-          rotation.y + dRotationY,
-          rotation.z
-        );
-        */
       },
-      onDragEnd: ({ event, movement: [mx, my] }) => {
+      onDragEnd: ({ event, offset: [x, y], movement: [mx, my] }) => {
         event.stopPropagation();
 
-        const rotation = props.parentCubeRef.current?.rotation;
+        // snapping in x direction
+        const rotation = mx * rotSpeed;
+        const rotationIteration = roundToNearest90(rotation);
 
-        if (rotation == undefined) return;
+        console.log(rotationIteration);
+        const offset = rotationIteration - rotation;
 
-        let rotationCountY;
-        const rotY = THREE.MathUtils.radToDeg(rotation.y);
+        console.log("offset: " + offset);
+        rotateRubiks(
+          selectedGroup,
+          currentRotationAxis,
+          currentRotationAxis,
+          THREE.MathUtils.degToRad(
+            offset
+          )
+        );
 
-        if (Math.abs(mx) * rotSpeed > 45) {
-          if (mx > 0) {
-            //left
-            rotationCountY = Math.ceil(rotY / 90);
-          } else {
-            //right
-            rotationCountY = Math.floor(rotY / 90);
-          }
-          rotation.set(
-            rotation.x,
-            THREE.MathUtils.degToRad(rotationCountY * 90),
-            rotation.z
-          );
-        } else if (Math.abs(mx) * rotSpeed < 45) {
-          if (mx > 0) {
-            //left
-            rotationCountY = Math.floor(rotY / 90);
-          } else {
-            //right
-            rotationCountY = Math.ceil(rotY / 90);
-          }
-          rotation.set(
-            rotation.x,
-            THREE.MathUtils.degToRad(rotationCountY * 90),
-            rotation.z
-          );
-        }
+        selectedGroup.forEach((rubiksCubeBox) => {
+          const currentRotation = rubiksCubeBox.current.rotation;
+          console.log(currentRotation);
+          const currentRotationInDegrees = [
+            roundToNearest90(MathUtils.radToDeg(currentRotation.x)),
+            roundToNearest90(MathUtils.radToDeg(currentRotation.y)),
+            roundToNearest90(MathUtils.radToDeg(currentRotation.z)),
+          ];
+          console.log(currentRotationInDegrees);
+          rubiksCubeBox.current.setRotationFromEuler(new THREE.Euler(
+            MathUtils.degToRad(currentRotationInDegrees[0]),
+            MathUtils.degToRad(currentRotationInDegrees[1]),
+            MathUtils.degToRad(currentRotationInDegrees[2]),
+          ));
+          rubiksCubeBox.current.position.round();
+        });
 
-        let rotationCountX;
-        const rotX = THREE.MathUtils.radToDeg(rotation.x);
 
-        if (Math.abs(my) * rotSpeed > 45) {
-          if (my > 0) {
-            //left
-            rotationCountX = Math.ceil(rotX / 90);
-          } else {
-            //right
-            rotationCountX = Math.floor(rotX / 90);
-          }
-
-          rotation.set(
-            THREE.MathUtils.degToRad(rotationCountX * 90),
-            rotation.y,
-            rotation.z
-          );
-        } else if (Math.abs(my) * rotSpeed < 45) {
-          if (my > 0) {
-            //left
-            rotationCountX = Math.floor(rotX / 90);
-          } else {
-            //right
-            rotationCountX = Math.ceil(rotX / 90);
-          }
-
-          rotation.set(
-            THREE.MathUtils.degToRad(rotationCountX * 90),
-            rotation.y,
-            rotation.z
-          );
-        }
+        setSelectedGroup([]);
 
         if (orbitControls) orbitControls.enabled = true;
       },
