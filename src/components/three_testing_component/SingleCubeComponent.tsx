@@ -4,7 +4,7 @@ import { MeshProps, useThree } from "@react-three/fiber";
 import { useGesture } from "@use-gesture/react";
 import React, { useRef, useState, useContext } from "react";
 import * as THREE from "three";
-import { MathUtils, Mesh } from "three";
+import { MathUtils, Mesh, RGB_PVRTC_2BPPV1_Format } from "three";
 import { RubiksContext } from "../RubiksContext";
 import { rotateAboutPoint, rotateRubiks } from "./RubiksCubeComponent";
 
@@ -121,52 +121,61 @@ function Plane(props: {
         let index1 = 1;
         let currentKey = "";
 
-        if (Math.abs(props.rotation.x) == Math.PI / 2) {
-          // the plane is facing upwards or downwards
+        // the plane is facing upwards or downwards
 
-          // figuring out the orientation of the camera for the different axes:
-          const vector1 = new THREE.Vector2(
-            camera.position.x - orbitControls.target.x,
-            camera.position.z - orbitControls.target.z
-          );
-          const vector2 = new THREE.Vector2(0, 1);
+        // figuring out the orientation of the camera for the different axes:
+        const vector1 = new THREE.Vector2(
+          camera.position.x - orbitControls.target.x,
+          camera.position.z - orbitControls.target.z
+        );
+        const vector2 = new THREE.Vector2(0, 1);
 
-          let angle = MathUtils.radToDeg(
-            Math.acos(
-              vector1.dot(vector2) / (vector1.length() * vector2.length())
-            )
-          );
+        let angle = MathUtils.radToDeg(
+          Math.acos(
+            vector1.dot(vector2) / (vector1.length() * vector2.length())
+          )
+        );
 
-          if (vector1.x < 0) {
-            angle = 360 - angle;
-          }
+        if (vector1.x < 0) {
+          angle = 360 - angle;
+        }
 
-          // Differentiation of cases:
-          if ((0 <= angle && angle < 45) || (315 < angle && angle <= 360)) {
-            // zeigt nach "vorne";
+        // Differentiation of cases:
+        if ((0 <= angle && angle < 45) || (315 < angle && angle <= 360)) {
+          // zeigt nach "vorne";
+
+          if (Math.abs(props.rotation.x) == Math.PI / 2) {
             index0 = 1;
             index1 = 0;
-            setInvertRotationDirection([
-              props.rotation.x == -Math.PI / 2 ? -1 : 1,
-              1,
-            ]);
-          } else if (45 < angle && angle < 135) {
-            // zeigt nach "links";
-            setInvertRotationDirection([
-              props.rotation.x == -Math.PI / 2 ? -1 : 1,
-              -1,
-            ]);
-          } else if (135 < angle && angle < 225) {
-            // zeigt nach "hinten";
+          }
+          setInvertRotationDirection([
+            props.rotation.x == -Math.PI / 2 ? -1 : 1,
+            1,
+          ]);
+        } else if (45 < angle && angle < 135) {
+          // zeigt nach "links";
+          setInvertRotationDirection([
+            props.rotation.x == -Math.PI / 2 ? -1 : 1,
+            -1,
+          ]);
+        } else if (135 < angle && angle < 225) {
+          // zeigt nach "hinten";
+          setInvertRotationDirection([
+            1,
+            -1,
+          ]);
+          if (Math.abs(props.rotation.x) == Math.PI / 2) {
             index0 = 1;
             index1 = 0;
             setInvertRotationDirection([
               props.rotation.x == -Math.PI / 2 ? 1 : -1,
               -1,
             ]);
-          } else if (225 < angle && angle < 315) {
-            // zeigt nach "rechts";
-            // es muss nichts getan werden
+          }
+        } else if (225 < angle && angle < 315) {
+          // zeigt nach "rechts";
+          // es muss nichts getan werden
+          if (Math.abs(props.rotation.x) == Math.PI / 2) {
             setInvertRotationDirection([
               props.rotation.x == -Math.PI / 2 ? 1 : -1,
               1,
@@ -180,6 +189,8 @@ function Plane(props: {
         } else if (Math.abs(dx) < Math.abs(dy)) {
           console.log("vertical movement");
           currentKey = possibleKeys[index1];
+        } else {
+          currentKey = possibleKeys[index0];
         }
         possibleGroups?.get(currentKey)?.forEach((element) => {
           group.push(element);
@@ -236,7 +247,7 @@ function Plane(props: {
           currentRotationAxis,
           THREE.MathUtils.degToRad(
             invertRotationDirection[0] * dx * rotSpeed +
-              invertRotationDirection[1] * dy * rotSpeed
+            invertRotationDirection[1] * dy * rotSpeed
           )
         );
 
