@@ -12,7 +12,7 @@ function Plane(props: {
   scale: number;
   respectiveCubePosition: THREE.Vector3; // the position of the cube this plane belongs to.
   position: THREE.Vector3;
-  rotation: THREE.Euler;
+  staticRotation: THREE.Euler;
   color: THREE.Color;
   parentCubeRef: React.RefObject<THREE.Mesh>;
 }) {
@@ -23,12 +23,14 @@ function Plane(props: {
     if (cubeRefs === undefined) return;
 
     const groups = new Map<string, React.MutableRefObject<THREE.Mesh>[]>();
-    const rotation = props.rotation;
+    const rotation = props.staticRotation;
+    const parentMesh = props.parentCubeRef.current;
+    if (parentMesh === null) return;
 
     // yGroup: Y Coordinate stays the same
     if (rotation.x == 0 || rotation.x == Math.PI) {
       const yGroup = [];
-      const yCoordinate = props.respectiveCubePosition.y;
+      const yCoordinate = parentMesh.position.y;
       for (const cubeRef of cubeRefs) {
         const currentRef = cubeRef.current;
 
@@ -43,7 +45,7 @@ function Plane(props: {
     if (rotation.y == 0) {
       // xGroup: X Coordinate stays the same
       const xGroup = [];
-      const xCoordinate = props.respectiveCubePosition.x;
+      const xCoordinate = parentMesh.position.x;
       for (const cubeRef of cubeRefs) {
         const currentRef = cubeRef.current;
 
@@ -60,7 +62,7 @@ function Plane(props: {
     ) {
       // zGroup: Z Coordinate stays the same
       const zGroup = [];
-      const zCoordinate = props.respectiveCubePosition.z;
+      const zCoordinate = parentMesh.position.z;
       for (const cubeRef of cubeRefs) {
         const currentRef = cubeRef.current;
 
@@ -142,21 +144,26 @@ function Plane(props: {
         }
 
         // Differentiation of cases:
+        const quaternion = new THREE.Quaternion();
+        const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
+        const rotation = new THREE.Euler();
+        rotation.setFromQuaternion(quaternion);
+
         if ((0 <= angle && angle < 45) || (315 < angle && angle <= 360)) {
           // zeigt nach "vorne";
 
-          if (Math.abs(props.rotation.x) == Math.PI / 2) {
+          if (Math.abs(rotation.x) == Math.PI / 2) {
             index0 = 1;
             index1 = 0;
           }
           setInvertRotationDirection([
-            props.rotation.x == -Math.PI / 2 ? -1 : 1,
+            rotation.x == -Math.PI / 2 ? -1 : 1,
             1,
           ]);
         } else if (45 < angle && angle < 135) {
           // zeigt nach "links";
           setInvertRotationDirection([
-            props.rotation.x == -Math.PI / 2 ? -1 : 1,
+            rotation.x == -Math.PI / 2 ? -1 : 1,
             -1,
           ]);
         } else if (135 < angle && angle < 225) {
@@ -165,20 +172,20 @@ function Plane(props: {
             1,
             -1,
           ]);
-          if (Math.abs(props.rotation.x) == Math.PI / 2) {
+          if (Math.abs(rotation.x) == Math.PI / 2) {
             index0 = 1;
             index1 = 0;
             setInvertRotationDirection([
-              props.rotation.x == -Math.PI / 2 ? 1 : -1,
+              rotation.x == -Math.PI / 2 ? 1 : -1,
               -1,
             ]);
           }
         } else if (225 < angle && angle < 315) {
           // zeigt nach "rechts";
           // es muss nichts getan werden
-          if (Math.abs(props.rotation.x) == Math.PI / 2) {
+          if (Math.abs(rotation.x) == Math.PI / 2) {
             setInvertRotationDirection([
-              props.rotation.x == -Math.PI / 2 ? 1 : -1,
+              rotation.x == -Math.PI / 2 ? 1 : -1,
               1,
             ]);
           }
@@ -215,12 +222,6 @@ function Plane(props: {
       },
       onDrag: ({ event, delta: [dx, dy], movement: [mx, my] }) => {
         event.stopPropagation();
-
-        const rotation = props.parentCubeRef.current?.rotation;
-        if (rotation == undefined) return;
-
-        const dRotationX = THREE.MathUtils.degToRad(dy * rotSpeed);
-        const dRotationY = THREE.MathUtils.degToRad(dx * rotSpeed);
 
         rotateRubiks(
           selectedGroup,
@@ -273,6 +274,9 @@ function Plane(props: {
 
         setSelectedGroup([]);
 
+
+
+
         if (orbitControls) orbitControls.enabled = true;
       },
     },
@@ -285,10 +289,13 @@ function Plane(props: {
     }
   );
 
+  const selfRef = useRef<THREE.Mesh>(null!);
+
   return (
     <>
       <mesh {...(bind() as MeshProps)}>
-        <mesh position={props.position} rotation={props.rotation}>
+        <mesh ref={selfRef}
+        position={props.position} rotation={props.staticRotation}>
           <planeBufferGeometry
             args={[1 * props.scale, 1 * props.scale]}
             attach="geometry"
@@ -300,7 +307,7 @@ function Plane(props: {
             attach="material"
           />
         </mesh>
-        <mesh position={offsetPosition} rotation={props.rotation}>
+        <mesh position={offsetPosition} rotation={props.staticRotation}>
           <planeBufferGeometry
             args={[0.9 * props.scale, 0.9 * props.scale]}
             attach="geometry"
@@ -389,7 +396,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
         scale={1}
         respectiveCubePosition={position}
         position={facePositions[i]}
-        rotation={faceRotations[i]}
+        staticRotation={faceRotations[i]}
         color={faceColors[i]}
         parentCubeRef={meshRef}
       />
