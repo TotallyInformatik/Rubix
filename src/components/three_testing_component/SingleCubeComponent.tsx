@@ -180,6 +180,8 @@ function Plane(props: {
         } else if (Math.abs(dx) < Math.abs(dy)) {
           console.log("vertical movement");
           currentKey = possibleKeys[index1];
+        } else {
+          currentKey = possibleKeys[index0];
         }
         possibleGroups?.get(currentKey)?.forEach((element) => {
           group.push(element);
