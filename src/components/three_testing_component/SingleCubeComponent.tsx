@@ -5,29 +5,41 @@ import { useGesture } from "@use-gesture/react";
 import React, { useRef, useState, useContext } from "react";
 import * as THREE from "three";
 import { MathUtils, Mesh, RGB_PVRTC_2BPPV1_Format } from "three";
+import { approxEquals } from "../../utils";
 import { RubiksContext } from "../RubiksContext";
-import { rotateAboutPoint, rotateRubiks } from "./RubiksCubeComponent";
+import { rotateAboutPoint, rotateRubiks, roundToNearest90, setRotationRubiks } from "./RubiksCubeComponent";
 
 function Plane(props: {
   scale: number;
   respectiveCubePosition: THREE.Vector3; // the position of the cube this plane belongs to.
   position: THREE.Vector3;
-  rotation: THREE.Euler;
+  staticRotation: THREE.Euler;
   color: THREE.Color;
   parentCubeRef: React.RefObject<THREE.Mesh>;
 }) {
+
   const getRespectiveGroups = (
     cubeRefs: React.MutableRefObject<THREE.Mesh>[] | undefined
   ) => {
+
+    // gruppen werden schon mal richtig ausgewählt.
+
     if (cubeRefs === undefined) return;
 
     const groups = new Map<string, React.MutableRefObject<THREE.Mesh>[]>();
-    const rotation = props.rotation;
+
+    const quaternion = new THREE.Quaternion();
+    const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
+    const rotation = new THREE.Euler();
+    rotation.setFromQuaternion(quaternion);
+
+    const parentMesh = props.parentCubeRef.current;
+    if (parentMesh === null) return;
 
     // yGroup: Y Coordinate stays the same
-    if (rotation.x == 0 || rotation.x == Math.PI) {
+    if (approxEquals(rotation.x, 0) || approxEquals(rotation.x, Math.PI)) {
       const yGroup = [];
-      const yCoordinate = props.respectiveCubePosition.y;
+      const yCoordinate = parentMesh.position.y;
       for (const cubeRef of cubeRefs) {
         const currentRef = cubeRef.current;
 
@@ -39,10 +51,10 @@ function Plane(props: {
       groups.set("y", yGroup);
     }
 
-    if (rotation.y == 0) {
+    if (approxEquals(rotation.y, 0)) {
       // xGroup: X Coordinate stays the same
       const xGroup = [];
-      const xCoordinate = props.respectiveCubePosition.x;
+      const xCoordinate = parentMesh.position.x;
       for (const cubeRef of cubeRefs) {
         const currentRef = cubeRef.current;
 
@@ -54,12 +66,14 @@ function Plane(props: {
     }
 
     if (
-      [Math.PI / 2, -Math.PI / 2].includes(rotation.x) ||
-      [Math.PI / 2, -Math.PI / 2].includes(rotation.y)
+      approxEquals(rotation.x, Math.PI / 2) || 
+      approxEquals(rotation.x, -Math.PI / 2) ||
+      approxEquals(rotation.y, Math.PI / 2) ||
+      approxEquals(rotation.y, -Math.PI / 2)
     ) {
       // zGroup: Z Coordinate stays the same
       const zGroup = [];
-      const zCoordinate = props.respectiveCubePosition.z;
+      const zCoordinate = parentMesh.position.z;
       for (const cubeRef of cubeRefs) {
         const currentRef = cubeRef.current;
 
@@ -141,21 +155,26 @@ function Plane(props: {
         }
 
         // Differentiation of cases:
+        const quaternion = new THREE.Quaternion();
+        const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
+        const rotation = new THREE.Euler();
+        rotation.setFromQuaternion(quaternion);
+
         if ((0 <= angle && angle < 45) || (315 < angle && angle <= 360)) {
           // zeigt nach "vorne";
 
-          if (Math.abs(props.rotation.x) == Math.PI / 2) {
+          if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
             index0 = 1;
             index1 = 0;
           }
           setInvertRotationDirection([
-            props.rotation.x == -Math.PI / 2 ? -1 : 1,
+            approxEquals(rotation.x, -Math.PI / 2) ? -1 : 1,
             1,
           ]);
         } else if (45 < angle && angle < 135) {
           // zeigt nach "links";
           setInvertRotationDirection([
-            props.rotation.x == -Math.PI / 2 ? -1 : 1,
+            approxEquals(rotation.x, -Math.PI / 2) ? -1 : 1,
             -1,
           ]);
         } else if (135 < angle && angle < 225) {
@@ -164,30 +183,28 @@ function Plane(props: {
             1,
             -1,
           ]);
-          if (Math.abs(props.rotation.x) == Math.PI / 2) {
+          if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
             index0 = 1;
             index1 = 0;
             setInvertRotationDirection([
-              props.rotation.x == -Math.PI / 2 ? 1 : -1,
+              approxEquals(rotation.x, -Math.PI / 2) ? 1 : -1,
               -1,
             ]);
           }
         } else if (225 < angle && angle < 315) {
           // zeigt nach "rechts";
           // es muss nichts getan werden
-          if (Math.abs(props.rotation.x) == Math.PI / 2) {
+          if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
             setInvertRotationDirection([
-              props.rotation.x == -Math.PI / 2 ? 1 : -1,
+              approxEquals(rotation.x, -Math.PI / 2) ? 1 : -1,
               1,
             ]);
           }
         }
 
         if (Math.abs(dx) > Math.abs(dy)) {
-          console.log("horizontal movement");
           currentKey = possibleKeys[index0];
         } else if (Math.abs(dx) < Math.abs(dy)) {
-          console.log("vertical movement");
           currentKey = possibleKeys[index1];
         } else {
           currentKey = possibleKeys[index0];
@@ -210,36 +227,12 @@ function Plane(props: {
             console.log("error: invalid axis");
         }
 
-        /*
-        const newSelectedGroup = new THREE.Group();
-
-        group.forEach((element) => {
-          // console.log(element.current.position);
-          // element.current.material = new THREE.MeshBasicMaterial({
-          //   color: "black",
-          // });
-          // element.current.material.needsUpdate = true;
-          //element.current.position.x = 2;
-
-          newSelectedGroup.add(element.current);
-        });
-
-        setSelectedGroup(newSelectedGroup);
-        console.log(selectedGroup);
-        */
-
         setSelectedGroup(group);
 
         // selectedGroup.rotation.set(MathUtils.degToRad(45), 0, 0);
       },
       onDrag: ({ event, delta: [dx, dy], movement: [mx, my] }) => {
         event.stopPropagation();
-
-        const rotation = props.parentCubeRef.current?.rotation;
-        if (rotation == undefined) return;
-
-        const dRotationX = THREE.MathUtils.degToRad(dy * rotSpeed);
-        const dRotationY = THREE.MathUtils.degToRad(dx * rotSpeed);
 
         rotateRubiks(
           selectedGroup,
@@ -251,84 +244,50 @@ function Plane(props: {
           )
         );
 
-        /*
-        rotation.set(
-          rotation.x + dRotationX,
-          rotation.y + dRotationY,
-          rotation.z
-        );
-        */
       },
-      onDragEnd: ({ event, movement: [mx, my] }) => {
+      onDragEnd: ({ event, offset: [x, y], movement: [mx, my] }) => {
         event.stopPropagation();
 
-        const rotation = props.parentCubeRef.current?.rotation;
+        // snapping in x direction
+        const rotation = mx * rotSpeed;
+        const rotationIteration = roundToNearest90(rotation);
 
-        if (rotation == undefined) return;
+        const offset = rotationIteration - rotation;
 
-        let rotationCountY;
-        const rotY = THREE.MathUtils.radToDeg(rotation.y);
+        rotateRubiks(
+          selectedGroup,
+          currentRotationAxis,
+          currentRotationAxis,
+          THREE.MathUtils.degToRad(
+            offset
+          )
+        );
 
-        if (Math.abs(mx) * rotSpeed > 45) {
-          if (mx > 0) {
-            //left
-            rotationCountY = Math.ceil(rotY / 90);
-          } else {
-            //right
-            rotationCountY = Math.floor(rotY / 90);
-          }
-          rotation.set(
-            rotation.x,
-            THREE.MathUtils.degToRad(rotationCountY * 90),
-            rotation.z
-          );
-        } else if (Math.abs(mx) * rotSpeed < 45) {
-          if (mx > 0) {
-            //left
-            rotationCountY = Math.floor(rotY / 90);
-          } else {
-            //right
-            rotationCountY = Math.ceil(rotY / 90);
-          }
-          rotation.set(
-            rotation.x,
-            THREE.MathUtils.degToRad(rotationCountY * 90),
-            rotation.z
-          );
-        }
+        selectedGroup.forEach((rubiksCubeBox) => {
+          const currentRef = rubiksCubeBox.current;
+          const currentRotation = rubiksCubeBox.current.rotation;
+          const currentRotationInDegrees = [
+            roundToNearest90(MathUtils.radToDeg(currentRotation.x)),
+            roundToNearest90(MathUtils.radToDeg(currentRotation.y)),
+            roundToNearest90(MathUtils.radToDeg(currentRotation.z)),
+          ];
+          currentRef.setRotationFromEuler(new THREE.Euler(
+            MathUtils.degToRad(currentRotationInDegrees[0]),
+            MathUtils.degToRad(currentRotationInDegrees[1]),
+            MathUtils.degToRad(currentRotationInDegrees[2]),
+          ));
+          currentRef.position.round();
 
-        let rotationCountX;
-        const rotX = THREE.MathUtils.radToDeg(rotation.x);
+          currentRef.updateMatrix();
+          const currentMatrix = currentRef.matrix;
 
-        if (Math.abs(my) * rotSpeed > 45) {
-          if (my > 0) {
-            //left
-            rotationCountX = Math.ceil(rotX / 90);
-          } else {
-            //right
-            rotationCountX = Math.floor(rotX / 90);
-          }
+          currentRef.geometry.applyMatrix4( currentMatrix );
+          currentRef.updateMatrix();
 
-          rotation.set(
-            THREE.MathUtils.degToRad(rotationCountX * 90),
-            rotation.y,
-            rotation.z
-          );
-        } else if (Math.abs(my) * rotSpeed < 45) {
-          if (my > 0) {
-            //left
-            rotationCountX = Math.floor(rotX / 90);
-          } else {
-            //right
-            rotationCountX = Math.ceil(rotX / 90);
-          }
+        });
 
-          rotation.set(
-            THREE.MathUtils.degToRad(rotationCountX * 90),
-            rotation.y,
-            rotation.z
-          );
-        }
+
+        setSelectedGroup([]);
 
         if (orbitControls) orbitControls.enabled = true;
       },
@@ -342,10 +301,13 @@ function Plane(props: {
     }
   );
 
+  const selfRef = useRef<THREE.Mesh>(null!);
+
   return (
     <>
       <mesh {...(bind() as MeshProps)}>
-        <mesh position={props.position} rotation={props.rotation}>
+        <mesh ref={selfRef}
+        position={props.position} rotation={props.staticRotation}>
           <planeBufferGeometry
             args={[1 * props.scale, 1 * props.scale]}
             attach="geometry"
@@ -357,7 +319,7 @@ function Plane(props: {
             attach="material"
           />
         </mesh>
-        <mesh position={offsetPosition} rotation={props.rotation}>
+        <mesh position={offsetPosition} rotation={props.staticRotation}>
           <planeBufferGeometry
             args={[0.9 * props.scale, 0.9 * props.scale]}
             attach="geometry"
@@ -446,7 +408,7 @@ export const SingleCubeComponent: React.FC<SingleCubeComponentProps> = ({
         scale={1}
         respectiveCubePosition={position}
         position={facePositions[i]}
-        rotation={faceRotations[i]}
+        staticRotation={faceRotations[i]}
         color={faceColors[i]}
         parentCubeRef={meshRef}
       />
