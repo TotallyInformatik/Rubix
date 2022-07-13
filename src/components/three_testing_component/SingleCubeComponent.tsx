@@ -28,16 +28,23 @@ function Plane(props: {
 
     const groups = new Map<string, React.MutableRefObject<THREE.Mesh>[]>();
 
-    const quaternion = new THREE.Quaternion();
-    const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
-    const rotation = new THREE.Euler();
-    rotation.setFromQuaternion(quaternion);
+    selfRef.current.updateMatrixWorld();
+    const rotation = new THREE.Euler(0, 0, 0);
+    //selfRef.current.getWorldDirection(rotation);
+    const currentMatrixWorld = selfRef.current.matrixWorld;
+    rotation.setFromRotationMatrix(currentMatrixWorld, "XYZ", true);
+    selfRef.current.updateMatrixWorld();
+
+    const direction = selfRef.current.getWorldDirection(new THREE.Vector3());
+    console.log(direction);
+
+    //console.log(rotation.x, rotation.y, rotation.z);
 
     const parentMesh = props.parentCubeRef.current;
     if (parentMesh === null) return;
 
     // yGroup: Y Coordinate stays the same
-    if (approxEquals(rotation.x, 0) || approxEquals(rotation.x, Math.PI)) {
+    if (approxEquals(direction.y, 0)) {
       const yGroup = [];
       const yCoordinate = parentMesh.position.y;
       for (const cubeRef of cubeRefs) {
@@ -51,7 +58,7 @@ function Plane(props: {
       groups.set("y", yGroup);
     }
 
-    if (approxEquals(rotation.y, 0)) {
+    if (approxEquals(direction.x, 0)) {
       // xGroup: X Coordinate stays the same
       const xGroup = [];
       const xCoordinate = parentMesh.position.x;
@@ -65,12 +72,7 @@ function Plane(props: {
       groups.set("x", xGroup);
     }
 
-    if (
-      approxEquals(rotation.x, Math.PI / 2) || 
-      approxEquals(rotation.x, -Math.PI / 2) ||
-      approxEquals(rotation.y, Math.PI / 2) ||
-      approxEquals(rotation.y, -Math.PI / 2)
-    ) {
+    if (approxEquals(direction.z, 0)) {
       // zGroup: Z Coordinate stays the same
       const zGroup = [];
       const zCoordinate = parentMesh.position.z;
@@ -155,15 +157,20 @@ function Plane(props: {
         }
 
         // Differentiation of cases:
-        const quaternion = new THREE.Quaternion();
-        const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
-        const rotation = new THREE.Euler();
-        rotation.setFromQuaternion(quaternion);
+        selfRef.current.updateMatrixWorld();
+        const rotation = new THREE.Euler(0, 0, 0);
+
+        const currentMatrixWorld = selfRef.current.matrixWorld;
+        rotation.setFromRotationMatrix(currentMatrixWorld);
+        selfRef.current.updateMatrixWorld();
+
+        //console.log(rotation.x, rotation.y, rotation.z);
 
         if ((0 <= angle && angle < 45) || (315 < angle && angle <= 360)) {
           // zeigt nach "vorne";
 
           if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
+            console.log("exchaging index");
             index0 = 1;
             index1 = 0;
           }
@@ -184,6 +191,7 @@ function Plane(props: {
             -1,
           ]);
           if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
+            console.log("exchaging index");
             index0 = 1;
             index1 = 0;
             setInvertRotationDirection([
@@ -278,11 +286,14 @@ function Plane(props: {
           ));
           currentRef.position.round();
 
-          currentRef.updateMatrix();
-          const currentMatrix = currentRef.matrix;
+          /*
+          selfRef.current.updateMatrixWorld();
+          const currentMatrix = currentRef.matrixWorld;
 
           currentRef.geometry.applyMatrix4( currentMatrix );
-          currentRef.updateMatrix();
+
+          selfRef.current.updateMatrixWorld();
+          */
 
         });
 
