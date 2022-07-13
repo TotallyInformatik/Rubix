@@ -28,20 +28,24 @@ export function rotateAboutPoint(
 
   pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
 
+  /*
+  if (pointIsWorld) {
+    obj.parent?.localToWorld(obj.position); // compensate for world coordinate
+  }
+  */
+
   obj.position.sub(point); // remove the offset
   obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
   obj.position.add(point); // re-add the offset
 
-  // instead of actually rotating the object, we will reset the faces.
+  /*
+  if (pointIsWorld) {
+    obj.parent?.worldToLocal(obj.position); // undo world coordinates compensation
+  }
+  */
+  
+  obj.rotateOnWorldAxis(axis, theta); // rotate the OBJECT 
 
-  obj.updateMatrix();
-  //obj.rotation.set( 0, 0, 0 );
-
-  obj.rotateOnAxis(axis, theta); // rotate the OBJECT 
-  obj.geometry.applyMatrix4( obj.matrix );
-
-  obj.scale.set( 1, 1, 1 );
-  obj.updateMatrix();
 
 }
 

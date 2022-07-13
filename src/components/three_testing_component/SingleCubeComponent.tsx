@@ -27,12 +27,17 @@ function Plane(props: {
     if (cubeRefs === undefined) return;
 
     const groups = new Map<string, React.MutableRefObject<THREE.Mesh>[]>();
-    const rotation = props.staticRotation;
+
+    const quaternion = new THREE.Quaternion();
+    const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
+    const rotation = new THREE.Euler();
+    rotation.setFromQuaternion(quaternion);
+
     const parentMesh = props.parentCubeRef.current;
     if (parentMesh === null) return;
 
     // yGroup: Y Coordinate stays the same
-    if (rotation.x == 0 || rotation.x == Math.PI) {
+    if (approxEquals(rotation.x, 0) || approxEquals(rotation.x, Math.PI)) {
       const yGroup = [];
       const yCoordinate = parentMesh.position.y;
       for (const cubeRef of cubeRefs) {
@@ -46,7 +51,7 @@ function Plane(props: {
       groups.set("y", yGroup);
     }
 
-    if (rotation.y == 0) {
+    if (approxEquals(rotation.y, 0)) {
       // xGroup: X Coordinate stays the same
       const xGroup = [];
       const xCoordinate = parentMesh.position.x;
@@ -61,8 +66,10 @@ function Plane(props: {
     }
 
     if (
-      [Math.PI / 2, -Math.PI / 2].includes(rotation.x) ||
-      [Math.PI / 2, -Math.PI / 2].includes(rotation.y)
+      approxEquals(rotation.x, Math.PI / 2) || 
+      approxEquals(rotation.x, -Math.PI / 2) ||
+      approxEquals(rotation.y, Math.PI / 2) ||
+      approxEquals(rotation.y, -Math.PI / 2)
     ) {
       // zGroup: Z Coordinate stays the same
       const zGroup = [];
@@ -152,13 +159,11 @@ function Plane(props: {
         const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
         const rotation = new THREE.Euler();
         rotation.setFromQuaternion(quaternion);
-        console.log(rotation.x);
 
         if ((0 <= angle && angle < 45) || (315 < angle && angle <= 360)) {
           // zeigt nach "vorne";
 
           if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
-            console.log("exchanging indecies");
             index0 = 1;
             index1 = 0;
           }
@@ -189,7 +194,7 @@ function Plane(props: {
         } else if (225 < angle && angle < 315) {
           // zeigt nach "rechts";
           // es muss nichts getan werden
-          if (Math.abs(rotation.x) == Math.PI / 2) {
+          if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
             setInvertRotationDirection([
               approxEquals(rotation.x, -Math.PI / 2) ? 1 : -1,
               1,
@@ -273,22 +278,16 @@ function Plane(props: {
           ));
           currentRef.position.round();
 
-
           currentRef.updateMatrix();
-          //obj.rotation.set( 0, 0, 0 );
+          const currentMatrix = currentRef.matrix;
 
-          currentRef.geometry.applyMatrix4( currentRef.matrix );
-
-          currentRef.scale.set( 1, 1, 1 );
+          currentRef.geometry.applyMatrix4( currentMatrix );
           currentRef.updateMatrix();
 
         });
 
 
         setSelectedGroup([]);
-
-
-
 
         if (orbitControls) orbitControls.enabled = true;
       },
