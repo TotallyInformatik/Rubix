@@ -18,28 +18,31 @@ export function roundToNearest90(angleInDegrees: number) {
 }
 
 export function rotateAboutPoint(
-  obj: any,
-  point: THREE.Vector3,
+  obj: THREE.Mesh,
   axis: THREE.Vector3,
+  point: THREE.Vector3,
   theta: number,
   pointIsWorld: boolean,
-  isSnapRotation: boolean
 ) {
-  pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
 
-  if (pointIsWorld) {
-    obj.parent.localToWorld(obj.position); // compensate for world coordinate
-  }
+
+  pointIsWorld = pointIsWorld === undefined ? false : pointIsWorld;
 
   obj.position.sub(point); // remove the offset
   obj.position.applyAxisAngle(axis, theta); // rotate the POSITION
   obj.position.add(point); // re-add the offset
 
-  if (pointIsWorld) {
-    obj.parent.worldToLocal(obj.position); // undo world coordinates compensation
-  }
+  // instead of actually rotating the object, we will reset the faces.
+
+  obj.updateMatrix();
+  //obj.rotation.set( 0, 0, 0 );
 
   obj.rotateOnAxis(axis, theta); // rotate the OBJECT 
+  obj.geometry.applyMatrix4( obj.matrix );
+
+  obj.scale.set( 1, 1, 1 );
+  obj.updateMatrix();
+
 }
 
 export function setRotationAboutPoint(
@@ -76,12 +79,11 @@ export function rotateRubiks(
   point: THREE.Vector3,
   axis: THREE.Vector3,
   theta: number,
-  isSnapRotation=false,
 ) {
 
   rubiksCubeBoxes.forEach((rubixCubeBox) => {
     const currentMeshRef = rubixCubeBox.current;
-    rotateAboutPoint(currentMeshRef, point, axis, theta, false, isSnapRotation);
+    rotateAboutPoint(currentMeshRef, point, axis, theta, false);
   });
 }
 

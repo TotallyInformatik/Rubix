@@ -5,6 +5,7 @@ import { useGesture } from "@use-gesture/react";
 import React, { useRef, useState, useContext } from "react";
 import * as THREE from "three";
 import { MathUtils, Mesh, RGB_PVRTC_2BPPV1_Format } from "three";
+import { approxEquals } from "../../utils";
 import { RubiksContext } from "../RubiksContext";
 import { rotateAboutPoint, rotateRubiks, roundToNearest90, setRotationRubiks } from "./RubiksCubeComponent";
 
@@ -20,6 +21,9 @@ function Plane(props: {
   const getRespectiveGroups = (
     cubeRefs: React.MutableRefObject<THREE.Mesh>[] | undefined
   ) => {
+
+    // gruppen werden schon mal richtig ausgewählt.
+
     if (cubeRefs === undefined) return;
 
     const groups = new Map<string, React.MutableRefObject<THREE.Mesh>[]>();
@@ -148,22 +152,24 @@ function Plane(props: {
         const meshQuaternion = selfRef.current.getWorldQuaternion(quaternion);
         const rotation = new THREE.Euler();
         rotation.setFromQuaternion(quaternion);
+        console.log(rotation.x);
 
         if ((0 <= angle && angle < 45) || (315 < angle && angle <= 360)) {
           // zeigt nach "vorne";
 
-          if (Math.abs(rotation.x) == Math.PI / 2) {
+          if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
+            console.log("exchanging indecies");
             index0 = 1;
             index1 = 0;
           }
           setInvertRotationDirection([
-            rotation.x == -Math.PI / 2 ? -1 : 1,
+            approxEquals(rotation.x, -Math.PI / 2) ? -1 : 1,
             1,
           ]);
         } else if (45 < angle && angle < 135) {
           // zeigt nach "links";
           setInvertRotationDirection([
-            rotation.x == -Math.PI / 2 ? -1 : 1,
+            approxEquals(rotation.x, -Math.PI / 2) ? -1 : 1,
             -1,
           ]);
         } else if (135 < angle && angle < 225) {
@@ -172,11 +178,11 @@ function Plane(props: {
             1,
             -1,
           ]);
-          if (Math.abs(rotation.x) == Math.PI / 2) {
+          if (approxEquals(Math.abs(rotation.x), Math.PI / 2)) {
             index0 = 1;
             index1 = 0;
             setInvertRotationDirection([
-              rotation.x == -Math.PI / 2 ? 1 : -1,
+              approxEquals(rotation.x, -Math.PI / 2) ? 1 : -1,
               -1,
             ]);
           }
@@ -185,7 +191,7 @@ function Plane(props: {
           // es muss nichts getan werden
           if (Math.abs(rotation.x) == Math.PI / 2) {
             setInvertRotationDirection([
-              rotation.x == -Math.PI / 2 ? 1 : -1,
+              approxEquals(rotation.x, -Math.PI / 2) ? 1 : -1,
               1,
             ]);
           }
@@ -241,10 +247,8 @@ function Plane(props: {
         const rotation = mx * rotSpeed;
         const rotationIteration = roundToNearest90(rotation);
 
-        console.log(rotationIteration);
         const offset = rotationIteration - rotation;
 
-        console.log("offset: " + offset);
         rotateRubiks(
           selectedGroup,
           currentRotationAxis,
@@ -255,20 +259,29 @@ function Plane(props: {
         );
 
         selectedGroup.forEach((rubiksCubeBox) => {
+          const currentRef = rubiksCubeBox.current;
           const currentRotation = rubiksCubeBox.current.rotation;
-          console.log(currentRotation);
           const currentRotationInDegrees = [
             roundToNearest90(MathUtils.radToDeg(currentRotation.x)),
             roundToNearest90(MathUtils.radToDeg(currentRotation.y)),
             roundToNearest90(MathUtils.radToDeg(currentRotation.z)),
           ];
-          console.log(currentRotationInDegrees);
-          rubiksCubeBox.current.setRotationFromEuler(new THREE.Euler(
+          currentRef.setRotationFromEuler(new THREE.Euler(
             MathUtils.degToRad(currentRotationInDegrees[0]),
             MathUtils.degToRad(currentRotationInDegrees[1]),
             MathUtils.degToRad(currentRotationInDegrees[2]),
           ));
-          rubiksCubeBox.current.position.round();
+          currentRef.position.round();
+
+
+          currentRef.updateMatrix();
+          //obj.rotation.set( 0, 0, 0 );
+
+          currentRef.geometry.applyMatrix4( currentRef.matrix );
+
+          currentRef.scale.set( 1, 1, 1 );
+          currentRef.updateMatrix();
+
         });
 
 
