@@ -1,5 +1,5 @@
 import { MeshProps, useThree } from "@react-three/fiber";
-import { useGesture } from "@use-gesture/react";
+import { useGesture, UserGestureConfig } from "@use-gesture/react";
 import React, { useRef, useState, useContext } from "react";
 import * as THREE from "three";
 import { MathUtils, Mesh, RGB_PVRTC_2BPPV1_Format } from "three";
@@ -10,12 +10,12 @@ import { rotateAboutPoint, rotateRubiks, roundToNearest90, setRotationRubiks } f
 
 const getRespectiveGroups = (
   cubeRefs: React.MutableRefObject<THREE.Mesh>[] | undefined,
-  selfRef: React.MutableRefObject<THREE.Mesh>
+  selfRef: React.MutableRefObject<THREE.Mesh>,
+  parentMesh: THREE.Mesh
 ) => {
 
   // gruppen werden schon mal richtig ausgewählt.
 
-  if (cubeRefs === undefined) return;
 
   const groups = new Map<string, React.MutableRefObject<THREE.Mesh>[]>();
 
@@ -29,58 +29,32 @@ const getRespectiveGroups = (
   const direction = selfRef.current.getWorldDirection(new THREE.Vector3());
   console.log(direction);
 
-  //console.log(rotation.x, rotation.y, rotation.z);
+  const axes = ["x", "y", "z"];
+  function getGroup(axisIndex: number) {
+    if (cubeRefs === undefined) return;
 
-  const parentMesh = props.parentCubeRef.current;
-  if (parentMesh === null) return;
-
-  // yGroup: Y Coordinate stays the same
-  if (approxEquals(direction.y, 0)) {
-    const yGroup = [];
-    const yCoordinate = parentMesh.position.y;
-    for (const cubeRef of cubeRefs) {
-      const currentRef = cubeRef.current;
-
-      if (currentRef.position.y == yCoordinate) {
-        yGroup.push(cubeRef);
+    if (approxEquals(direction.getComponent(axisIndex), 0)) {
+      const group = [];
+      const coordinate = parentMesh.position.getComponent(axisIndex);
+      for (const cubeRef of cubeRefs) {
+        const currentRef = cubeRef.current;
+  
+        if (currentRef.position.getComponent(axisIndex) == coordinate) {
+          group.push(cubeRef);
+        }
       }
+  
+      groups.set(axes[axisIndex], group);
     }
-
-    groups.set("y", yGroup);
   }
 
-  if (approxEquals(direction.x, 0)) {
-    // xGroup: X Coordinate stays the same
-    const xGroup = [];
-    const xCoordinate = parentMesh.position.x;
-    for (const cubeRef of cubeRefs) {
-      const currentRef = cubeRef.current;
+  getGroup(1);
+  getGroup(0);
+  getGroup(2);
 
-      if (currentRef.position.x == xCoordinate) {
-        xGroup.push(cubeRef);
-      }
-    }
-    groups.set("x", xGroup);
-  }
-
-  if (approxEquals(direction.z, 0)) {
-    // zGroup: Z Coordinate stays the same
-    const zGroup = [];
-    const zCoordinate = parentMesh.position.z;
-    for (const cubeRef of cubeRefs) {
-      const currentRef = cubeRef.current;
-
-      if (currentRef.position.z == zCoordinate) {
-        zGroup.push(cubeRef);
-      }
-    }
-    groups.set("z", zGroup);
-  }
 
   return groups;
 };
-
-
 
 
 export function Plane(props: {
@@ -110,28 +84,38 @@ export function Plane(props: {
   const [invertRotationDirection, setInvertRotationDirection] = useState([
     1, 1,
   ]);
+  const [lock, setLock] = useState("x");
   const rotSpeed = 1;
 
-  const gestureConfig: = {
+  const gestureConfig: UserGestureConfig = {
     //lock rotation for direction
+    // PROBLEM: 
+    // filterTaps / delay / etc. führen zu propagation, braucht man aber...
     drag: {
+      delay: 1,
       axis: "lock",
-      filterTaps: true,
+
     },
   }
+
+  let cumulateRotation = 0;
 
   const bind = useGesture(
     {
       onDragStart: ({
         event,
         delta: [dx, dy],
+        movement: [mx, my]
       }) => {
         event.stopPropagation();
 
+        cumulateRotation += dx * rotSpeed + dy * rotSpeed;
+
         if (!orbitControls) return;
+        if (props.parentCubeRef.current == null) return;
         if (orbitControls) orbitControls.enabled = false;
 
-        const possibleGroups = getRespectiveGroups(cubeRefs, selfRef);
+        const possibleGroups = getRespectiveGroups(cubeRefs, selfRef, props.parentCubeRef.current);
         const possibleKeys = Array.from(
           possibleGroups?.keys() as Iterable<string>
         );
@@ -250,6 +234,9 @@ export function Plane(props: {
       onDrag: ({ event, delta: [dx, dy], movement: [mx, my] }) => {
         event.stopPropagation();
 
+        cumulateRotation += invertRotationDirection[0] * dx * rotSpeed +
+        invertRotationDirection[1] * dy * rotSpeed;
+
         rotateRubiks(
           selectedGroup,
           currentRotationAxis,
@@ -261,11 +248,13 @@ export function Plane(props: {
         );
 
       },
-      onDragEnd: ({ event, offset: [x, y], movement: [mx, my] }) => {
+      onDragEnd: ({ event, offset: [x, y], movement: [mx, my], delta: [dx, dy] }) => {
         event.stopPropagation();
 
+        cumulateRotation += dx * rotSpeed + dy * rotSpeed;
         // snapping in x direction
-        const rotation = mx * rotSpeed;
+        //const rotation = mx * rotSpeed + my * rotSpeed;
+        const rotation = cumulateRotation;
         const rotationIteration = roundToNearest90(rotation);
 
         const offset = rotationIteration - rotation;
@@ -298,6 +287,7 @@ export function Plane(props: {
 
 
         setSelectedGroup([]);
+        cumulateRotation = 0;
 
         if (orbitControls) orbitControls.enabled = true;
       },
