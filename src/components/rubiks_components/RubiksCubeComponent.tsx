@@ -7,6 +7,7 @@ import { SingleCubeComponent } from "./SingleCubeComponent";
 
 export function roundToNearest90(angleInDegrees: number) {
 
+  /*
   const rotationDirection = Math.round(angleInDegrees / Math.abs(angleInDegrees)); // sholud be 1 or -1
   let rotationIteration = 0;
   while (Math.abs(Math.abs(rotationIteration) - Math.abs(angleInDegrees)) > Math.abs(Math.abs(rotationIteration + rotationDirection * 90) - Math.abs(angleInDegrees))) {
@@ -14,6 +15,8 @@ export function roundToNearest90(angleInDegrees: number) {
   }
 
   return rotationIteration;
+  */
+ return Math.round(angleInDegrees / 90) * 90;
 
 }
 

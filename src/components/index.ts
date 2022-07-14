@@ -1,2 +1,2 @@
-export * from "./three_testing_component";
+export * from "./rubiks_components";
 export * from "./RubiksContext";
